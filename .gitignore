@@ -1,0 +1,33 @@
+# Build output
+target/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+*.code-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Maven wrapper
+.mvn/
+
+# Logs
+*.log
+
+# Compiled classes
+*.class
+
+# Package files
+*.jar
+*.war
+*.ear
+
+# Dependency reduced POM
+dependency-reduced-pom.xml
