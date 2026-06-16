@@ -2,6 +2,7 @@ package com.titan.board;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import com.titan.utils.FEN;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -437,5 +438,43 @@ class BoardTest {
         board3.addPiece(Piece.ROOK, Bits.Square.A1, true);
         board3.addPiece(Piece.KING, Bits.Square.E8, false);
         assertFalse(board3.isInsufficientMaterial());
+    }
+
+    @Test
+    @DisplayName("Board - FEN initialization and make/unmake capture")
+    void testMakeUnmakeCaptureFEN() {
+        String fen = "rnbqkbnr/pppp1ppp/8/4p3/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2";
+        Board board = FEN.parse(fen);
+        long initialKey = board.key();
+        
+        // Capture: d4xe5
+        Move dxe5 = Move.ofCapture(Bits.Square.D4, Bits.Square.E5);
+        board.makeMove(dxe5);
+        
+        board.unmakeMove();
+        
+        assertEquals(initialKey, board.key());
+        assertEquals(fen, FEN.generate(board));
+    }
+
+    @Test
+    @DisplayName("Board - FEN initialization and castling rights update")
+    void testMakeUnmakeCastlingFEN() {
+        String fen = "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1";
+        Board board = FEN.parse(fen);
+        long initialKey = board.key();
+
+        // White kingside castle
+        Move o_o = Move.of(Bits.Square.E1, Bits.Square.G1, Move.FLAG_CASTLE_KING);
+        board.makeMove(o_o);
+        
+        assertFalse(board.getState().hasCastlingRight(BoardState.WHITE_KING_SIDE));
+        assertFalse(board.getState().hasCastlingRight(BoardState.WHITE_QUEEN_SIDE));
+        
+        board.unmakeMove();
+        
+        assertEquals(initialKey, board.key());
+        assertTrue(board.getState().hasCastlingRight(BoardState.WHITE_KING_SIDE));
+        assertTrue(board.getState().hasCastlingRight(BoardState.WHITE_QUEEN_SIDE));
     }
 }
