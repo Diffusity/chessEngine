@@ -571,6 +571,15 @@ public class Board {
         this.state = state;
     }
 
+    public void setFenState(int castlingRights, int enPassantSquare, int halfMoveClock) {
+        this.state = new BoardState(castlingRights, enPassantSquare, halfMoveClock);
+    }
+
+    public void finalizeSetup() {
+        this.state.key = Zobrist.computeKey(this);
+        this.state.pawnKey = Zobrist.computePawnKey(this);
+    }
+
     public void setFullMoveNumber(int fullMoveNumber) {
         this.fullMoveNumber = fullMoveNumber;
     }
