@@ -42,6 +42,27 @@ public class MoveGenerator {
     }
 
     /**
+     * Generates all strictly legal capture moves for the current position.
+     * Used by quiescence search to resolve tactical sequences.
+     */
+    public static List<Move> generateCaptures(Board board) {
+        List<Move> pseudoLegal = generatePseudoLegalMoves(board);
+        List<Move> captures = new ArrayList<>();
+        boolean whiteToMove = board.isWhiteToMove();
+
+        for (Move move : pseudoLegal) {
+            if (!move.isCapture()) continue;
+            if (board.makeMove(move)) {
+                if (!isInCheck(board, whiteToMove)) {
+                    captures.add(move);
+                }
+                board.unmakeMove();
+            }
+        }
+        return captures;
+    }
+
+    /**
      * Checks if the given side's king is currently under attack.
      *
      * @param board the board position

@@ -384,6 +384,34 @@ public class Board {
         }
     }
 
+    /**
+     * Makes a "null move" — passes the turn without moving any piece.
+     * Used in Null Move Pruning (search optimization).
+     */
+    public void makeNullMove() {
+        stateHistory[ply] = state.copy();
+        keyHistory[ply] = state.key;
+        moveHistory[ply] = null;
+
+        state.key ^= Zobrist.enPassantKey(state.enPassantSquare);
+        state.enPassantSquare = Bits.Square.NONE;
+        state.key ^= Zobrist.enPassantKey(state.enPassantSquare);
+        state.key ^= Zobrist.sideKey();
+        state.halfMoveClock++;
+
+        ply++;
+        white = !white;
+    }
+
+    /**
+     * Unmakes a null move — restores the previous state.
+     */
+    public void unmakeNullMove() {
+        white = !white;
+        ply--;
+        state = stateHistory[ply];
+    }
+
     // ========================
     // Raw piece ops (no Zobrist updates — used only in unmake where state is fully restored)
     // ========================
