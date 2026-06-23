@@ -4,6 +4,11 @@ import com.titan.board.Board;
 import com.titan.board.Move;
 import com.titan.evaluation.Evaluator;
 import com.titan.movegen.MoveGenerator;
+import com.titan.tables.history.HistoryTable;
+import com.titan.tables.history.KillerTable;
+import com.titan.tables.tt.HashEntry;
+import com.titan.tables.tt.HashFlag;
+import com.titan.tables.tt.TranspositionTable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,12 +28,24 @@ public class Searcher implements Search {
 
     private SearchStack searchStack;
     private SearchLimits limits;
+    
+    private TranspositionTable tt;
+    private KillerTable killerTable;
+    private HistoryTable historyTable;
+    
+    // Futility margins based on depth
+    private static final int[] futilityMargin = { 0, 200, 300, 500 };
 
     public Searcher(Board board) {
         this.board = board;
         this.pvTable = new Move[MAX_DEPTH][MAX_DEPTH];
         this.pvLength = new int[MAX_DEPTH];
         this.searchStack = new SearchStack(MAX_DEPTH + 4);
+        
+        // 64 MB default size
+        this.tt = new TranspositionTable(64);
+        this.killerTable = new KillerTable(MAX_DEPTH);
+        this.historyTable = new HistoryTable();
     }
 
     @Override
@@ -37,6 +54,10 @@ public class Searcher implements Search {
         this.stopped = false;
         this.nodes = 0;
         this.searchStack.clear();
+        this.killerTable.clear();
+        
+        this.tt.newSearch();
+        this.historyTable.age();
 
         for (int i = 0; i < MAX_DEPTH; i++) {
             Arrays.fill(pvTable[i], null);
@@ -56,9 +77,21 @@ public class Searcher implements Search {
         Move bestMove = null;
         int bestScore = Score.NONE;
         int depthReached = 0;
+        
+        int alpha = -Score.INFINITY;
+        int beta = Score.INFINITY;
 
         for (int depth = 1; depth <= targetDepth; depth++) {
-            int score = alphaBeta(depth, 0, -Score.INFINITY, Score.INFINITY, true);
+            int score = alphaBeta(depth, 0, alpha, beta, true);
+
+            // Aspiration window fallback
+            if (depth > 4) {
+                if (score <= alpha || score >= beta) {
+                    alpha = -Score.INFINITY;
+                    beta = Score.INFINITY;
+                    score = alphaBeta(depth, 0, alpha, beta, true);
+                }
+            }
 
             if (stopped && depth > 1) {
                 break;
@@ -67,6 +100,15 @@ public class Searcher implements Search {
             bestScore = score;
             bestMove = pvTable[0][0];
             depthReached = depth;
+            
+            // Set up aspiration window for next depth
+            if (depth >= 4 && !Score.isMateScore(bestScore)) {
+                alpha = bestScore - 25;
+                beta = bestScore + 25;
+            } else {
+                alpha = -Score.INFINITY;
+                beta = Score.INFINITY;
+            }
 
             // Extract PV
             List<Move> pv = new ArrayList<>();
@@ -90,7 +132,6 @@ public class Searcher implements Search {
             }
         }
 
-        // Return the best result found
         List<Move> finalPv = new ArrayList<>();
         for (int i = 0; i < pvLength[0]; i++) {
             finalPv.add(pvTable[0][i]);
@@ -104,7 +145,6 @@ public class Searcher implements Search {
     }
 
     private int alphaBeta(int depth, int ply, int alpha, int beta, boolean allowNull) {
-        // Time check every 2048 nodes
         if ((nodes & 2047) == 0 && limits.isTimeUp()) {
             stopped = true;
         }
@@ -113,12 +153,13 @@ public class Searcher implements Search {
 
         pvLength[ply] = ply;
 
-        // Draw detection
+        boolean isRoot = (ply == 0);
+        boolean isPVNode = (beta - alpha > 1);
+
         if (ply > 0 && isDraw()) {
             return Score.DRAW;
         }
 
-        // Check extension
         boolean inCheck = MoveGenerator.isInCheck(board, board.isWhiteToMove());
         if (inCheck) {
             depth++;
@@ -131,6 +172,47 @@ public class Searcher implements Search {
         if (ply >= MAX_DEPTH - 1) {
             return Evaluator.evaluate(board);
         }
+        
+        int origAlpha = alpha;
+        
+        // Transposition Table Probe
+        HashEntry ttEntry = tt.probe(board.key(), ply);
+        int ttMove = 0;
+        
+        if (ttEntry != null) {
+            ttMove = ttEntry.move;
+            if (ttEntry.depth >= depth && !isPVNode) {
+                int ttScore = TranspositionTable.getScore(ttEntry, ply);
+                if (ttEntry.flag == HashFlag.EXACT.ordinal()) {
+                    return ttScore;
+                } else if (ttEntry.flag == HashFlag.LOWER_BOUND.ordinal()) {
+                    alpha = Math.max(alpha, ttScore);
+                } else if (ttEntry.flag == HashFlag.UPPER_BOUND.ordinal()) {
+                    beta = Math.min(beta, ttScore);
+                }
+                
+                if (alpha >= beta) {
+                    return ttScore;
+                }
+            }
+        }
+        
+        int staticEval = Evaluator.evaluate(board);
+
+        // Null Move Pruning
+        boolean hasNonPawnMaterial = board.hasNonPawnMaterial(board.isWhiteToMove());
+        if (allowNull && !inCheck && !isPVNode && depth >= 3 && hasNonPawnMaterial) {
+            board.makeNullMove();
+            int R = 2; // reduction
+            int score = -alphaBeta(depth - 1 - R, ply + 1, -beta, -beta + 1, false);
+            board.unmakeNullMove();
+            
+            if (stopped) return 0;
+            
+            if (score >= beta) {
+                return beta;
+            }
+        }
 
         List<Move> moves = MoveGenerator.generateLegalMoves(board);
         if (moves.isEmpty()) {
@@ -140,29 +222,99 @@ public class Searcher implements Search {
                 return Score.DRAW;
             }
         }
+        
+        int[] moveScores = new int[moves.size()];
+        MoveOrderer.scoreMoves(moves, moveScores, board, ttMove, killerTable, ply, historyTable);
 
         int movesSearched = 0;
+        Move bestMove = null;
 
-        for (Move move : moves) {
+        for (int i = 0; i < moves.size(); i++) {
+            MoveOrderer.pickMove(moves, moveScores, i);
+            Move move = moves.get(i);
+            
+            // Futility Pruning
+            if (!isPVNode && !inCheck && depth <= 3 && move.isQuiet() && movesSearched > 0 && !Score.isMateScore(alpha) && !Score.isMateScore(beta)) {
+                if (staticEval + futilityMargin[depth] <= alpha) {
+                    continue; // Skip quiet move
+                }
+            }
+
             board.makeMove(move);
             nodes++;
             searchStack.get(ply).currentMove = move;
+            
+            int score;
+            
+            // Late Move Reductions (LMR)
+            boolean fullSearch = true;
+            if (depth >= 3 && movesSearched >= 3 && move.isQuiet() && !inCheck && !isPVNode) {
+                int reduction = (int) (1 + Math.log(depth) * Math.log(movesSearched) / 2.0);
+                if (reduction < 0) reduction = 0;
+                int reducedDepth = Math.max(0, depth - 1 - reduction);
+                
+                score = -alphaBeta(reducedDepth, ply + 1, -alpha - 1, -alpha, true);
+                if (score > alpha) {
+                    fullSearch = true;
+                } else {
+                    fullSearch = false;
+                }
+            } else {
+                fullSearch = true;
+                score = 0; // dummy
+            }
 
-            int score = -alphaBeta(depth - 1, ply + 1, -beta, -alpha, true);
+            if (fullSearch) {
+                // Principal Variation Search
+                if (movesSearched == 0) {
+                    score = -alphaBeta(depth - 1, ply + 1, -beta, -alpha, true);
+                } else {
+                    score = -alphaBeta(depth - 1, ply + 1, -alpha - 1, -alpha, true);
+                    if (score > alpha && score < beta) {
+                        score = -alphaBeta(depth - 1, ply + 1, -beta, -alpha, true);
+                    }
+                }
+            }
 
             board.unmakeMove();
 
             if (stopped) return 0;
 
             if (score > alpha) {
+                bestMove = move;
                 if (score >= beta) {
-                    return beta; // beta cutoff
+                    // Beta Cutoff
+                    if (move.isQuiet()) {
+                        killerTable.add(move.encoded(), ply);
+                        historyTable.addBonus(board.isWhiteToMove(), move.from(), move.to(), depth);
+                        
+                        // Malus for previous quiet moves
+                        for (int j = 0; j < i; j++) {
+                            Move prevMove = moves.get(j);
+                            if (prevMove.isQuiet()) {
+                                historyTable.addMalus(board.isWhiteToMove(), prevMove.from(), prevMove.to(), depth);
+                            }
+                        }
+                    }
+                    
+                    HashFlag flag = HashFlag.LOWER_BOUND;
+                    tt.store(board.key(), move.encoded(), beta, depth, flag, ply);
+                    
+                    return beta;
                 }
                 alpha = score;
                 updatePV(ply, move);
             }
             movesSearched++;
         }
+        
+        HashFlag flag = HashFlag.EXACT;
+        if (alpha <= origAlpha) {
+            flag = HashFlag.UPPER_BOUND;
+        }
+        
+        int moveEncoded = bestMove != null ? bestMove.encoded() : 0;
+        tt.store(board.key(), moveEncoded, alpha, depth, flag, ply);
 
         return alpha;
     }
@@ -178,7 +330,6 @@ public class Searcher implements Search {
             return Evaluator.evaluate(board);
         }
 
-        // Draw detection
         if (isDraw()) {
             return Score.DRAW;
         }
@@ -192,8 +343,14 @@ public class Searcher implements Search {
         }
 
         List<Move> captures = MoveGenerator.generateCaptures(board);
+        
+        int[] moveScores = new int[captures.size()];
+        MoveOrderer.scoreMoves(captures, moveScores, board, 0, null, ply, null);
 
-        for (Move move : captures) {
+        for (int i = 0; i < captures.size(); i++) {
+            MoveOrderer.pickMove(captures, moveScores, i);
+            Move move = captures.get(i);
+            
             board.makeMove(move);
             nodes++;
             int score = -quiescence(-beta, -alpha, ply + 1);

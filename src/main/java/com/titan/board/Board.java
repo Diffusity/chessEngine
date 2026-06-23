@@ -539,6 +539,18 @@ public class Board {
     // ========================
 
     /**
+     * Checks if the given side has any material other than pawns and king.
+     * Used for Null Move Pruning.
+     */
+    public boolean hasNonPawnMaterial(boolean isWhite) {
+        long knights = getBitboard(Piece.KNIGHT, isWhite);
+        long bishops = getBitboard(Piece.BISHOP, isWhite);
+        long rooks = getBitboard(Piece.ROOK, isWhite);
+        long queens = getBitboard(Piece.QUEEN, isWhite);
+        return (knights | bishops | rooks | queens) != 0;
+    }
+
+    /**
      * Checks if the current position has occurred before (for repetition draw detection).
      * Only looks back within the current game (not across newgame boundaries).
      *
