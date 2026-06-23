@@ -6,7 +6,7 @@ package com.titan.tables.tt;
 public class HashEntry {
     public long key;       // full Zobrist key (for collision detection)
     public int move;       // best move (encoded int)
-    public short score;    // search score
+    public int score;      // search score
     public short depth;    // search depth when stored
     public byte flag;      // HashFlag ordinal
     public byte age;       // search generation (for replacement policy)

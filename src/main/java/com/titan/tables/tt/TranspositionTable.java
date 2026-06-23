@@ -121,7 +121,7 @@ public class TranspositionTable {
             if (move != 0) { // Don't overwrite an existing good move with a null move
                 entry.move = move;
             }
-            entry.score = (short) adjustedScore;
+            entry.score = adjustedScore;
             entry.depth = (short) depth;
             entry.flag = (byte) flag.ordinal();
             entry.age = currentAge;
