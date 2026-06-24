@@ -48,6 +48,10 @@ public class Searcher implements Search {
         this.historyTable = new HistoryTable();
     }
 
+    public TranspositionTable getTranspositionTable() {
+        return tt;
+    }
+
     @Override
     public SearchResult search(Board board, SearchLimits limits) {
         this.limits = limits;
