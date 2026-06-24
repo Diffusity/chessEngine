@@ -1,5 +1,7 @@
 package com.titan;
 
+import com.titan.uci.UCIHandler;
+
 /**
  * Entry point for the Titan Chess Engine.
  * <p>
@@ -9,7 +11,7 @@ package com.titan;
 public class Application {
 
     public static void main(String[] args) {
-        System.out.println("Titan Chess Engine v1.0.0");
-        System.out.println("UCI protocol ready.");
+        UCIHandler handler = new UCIHandler();
+        handler.run();
     }
 }
