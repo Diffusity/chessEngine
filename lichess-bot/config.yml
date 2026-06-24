@@ -1,0 +1,23 @@
+token: "YOUR_LICHESS_BOT_API_TOKEN"   # Replace with real token
+
+engine:
+  dir: "../target"
+  name: "titan-chess-engine-1.0.0-SNAPSHOT.jar"
+  protocol: "uci"
+  
+  # The command to launch the engine
+  # lichess-bot will pipe UCI commands via stdin/stdout
+  command: "java -jar {dir}/{name}"
+
+challenge:
+  accept:
+    modes:
+      - casual
+      - rated
+    variants:
+      - standard
+    timeControls:
+      - bullet
+      - blitz
+      - rapid
+      - classical

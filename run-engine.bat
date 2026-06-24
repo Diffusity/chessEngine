@@ -1,0 +1,6 @@
+@echo off
+echo Building Titan Chess Engine...
+call mvn package -DskipTests -q
+echo.
+echo Starting Titan UCI Engine...
+java -jar target\titan-chess-engine-1.0.0-SNAPSHOT.jar
