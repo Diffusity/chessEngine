@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class Searcher implements Search {
 
-    private final Board board;
+    private Board board;
     private volatile boolean stopped;
     private long nodes;
 
@@ -46,6 +46,10 @@ public class Searcher implements Search {
         this.tt = new TranspositionTable(64);
         this.killerTable = new KillerTable(MAX_DEPTH);
         this.historyTable = new HistoryTable();
+    }
+
+    public void setBoard(Board board) {
+        this.board = board;
     }
 
     public TranspositionTable getTranspositionTable() {

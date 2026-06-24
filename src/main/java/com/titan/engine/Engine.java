@@ -29,7 +29,7 @@ public class Engine {
      * Resets the engine to a new game state.
      */
     public void newGame() {
-        board = FEN.parse(FEN.STARTING_FEN);
+        setPosition(FEN.STARTING_FEN);
         searcher.getTranspositionTable().clear();
     }
 
@@ -37,7 +37,10 @@ public class Engine {
      * Sets the board position from a FEN string.
      */
     public void setPosition(String fen) {
-        board = FEN.parse(fen);
+        Board newBoard = FEN.parse(fen);
+        // Copy the state into our existing board instance so Searcher doesn't lose the reference
+        this.board = newBoard;
+        this.searcher.setBoard(this.board);
     }
 
     /**
