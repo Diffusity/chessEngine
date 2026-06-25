@@ -23,70 +23,70 @@ public class SEE {
         int from = move.from();
         int to = move.to();
         
-        int nextVictim = PIECE_VALUES[board.pieceAt(from).index()];
+        int[] gain = new int[32];
+        int d = 0;
         
-        int balance = move.isEnPassant() ? PIECE_VALUES[Piece.PAWN.index()] : 
-                      (board.pieceAt(to) != null ? PIECE_VALUES[board.pieceAt(to).index()] : 0);
-                      
+        int victimVal = move.isEnPassant() ? PIECE_VALUES[Piece.PAWN.index()] : 
+                        (board.pieceAt(to) != null ? PIECE_VALUES[board.pieceAt(to).index()] : 0);
+                        
         if (move.isPromotion()) {
-            nextVictim = PIECE_VALUES[move.promoPiece().index()];
-            balance += nextVictim - PIECE_VALUES[Piece.PAWN.index()];
+            victimVal += PIECE_VALUES[move.promoPiece().index()] - PIECE_VALUES[Piece.PAWN.index()];
         }
         
-        balance -= threshold;
-        if (balance < 0) return false;
+        gain[0] = victimVal;
         
-        balance -= nextVictim;
-        if (balance >= 0) return true;
+        // Initial quick check if even winning the piece for free is worse than threshold
+        if (gain[0] < threshold) return false;
+        
+        int attackerVal = PIECE_VALUES[board.pieceAt(from).index()];
+        if (move.isPromotion()) {
+            attackerVal = PIECE_VALUES[move.promoPiece().index()];
+        }
         
         long occupied = board.getAllPieces();
         occupied = Bits.clearBit(occupied, from);
         occupied = Bits.setBit(occupied, to);
         
         boolean whiteToMove = !board.isWhiteToMove();
-        
         long attackers = getAttackers(board, to, occupied);
         
-        int[] gain = new int[32];
-        gain[0] = balance + nextVictim;
-        int d = 0;
-        
         while (true) {
+            d++;
+            if (d >= 31) break; // prevent array out of bounds
+            
+            gain[d] = attackerVal - gain[d - 1];
+            
             long myAttackers = attackers & board.getPieces(whiteToMove);
             if (myAttackers == 0) break;
             
             int lvaSq = getLeastValuableAttacker(board, myAttackers);
             Piece attacker = board.pieceAt(lvaSq);
+            attackerVal = PIECE_VALUES[attacker.index()];
             
             occupied = Bits.clearBit(occupied, lvaSq);
             
-            // X-ray attacks behind sliders
+            // X-ray attacks
             if (attacker == Piece.PAWN || attacker == Piece.BISHOP || attacker == Piece.ROOK || attacker == Piece.QUEEN) {
-                attackers |= getAttackers(board, to, occupied) & ~occupied; // add revealed attackers
+                attackers |= getAttackers(board, to, occupied) & ~occupied;
                 attackers &= occupied;
             }
             
-            d++;
-            gain[d] = nextVictim - gain[d - 1];
-            nextVictim = PIECE_VALUES[attacker.index()];
             whiteToMove = !whiteToMove;
-            
-            if (Math.max(-gain[d-1], gain[d]) < 0) break;
         }
         
         while (--d > 0) {
             gain[d - 1] = -Math.max(-gain[d - 1], gain[d]);
         }
         
-        return gain[0] >= 0;
+        return gain[0] >= threshold;
     }
 
     private static long getAttackers(Board board, int sq, long occupied) {
         long attackers = 0;
         
-        // Pawns
-        attackers |= Attacks.PAWN_ATTACKS[0][sq] & board.getBitboard(Piece.PAWN, true); // White pawns attacking black sq
-        attackers |= Attacks.PAWN_ATTACKS[1][sq] & board.getBitboard(Piece.PAWN, false); // Black pawns attacking white sq
+        // Pawns (to find white pawns attacking 'sq', we use black pawn attack pattern from 'sq', and vice versa)
+        attackers |= Attacks.PAWN_ATTACKS[1][sq] & board.getBitboard(Piece.PAWN, true); // White pawns attacking 'sq'
+        attackers |= Attacks.PAWN_ATTACKS[0][sq] & board.getBitboard(Piece.PAWN, false); // Black pawns attacking 'sq'
         
         // Knights
         attackers |= Attacks.KNIGHT_ATTACKS[sq] & (board.getBitboard(Piece.KNIGHT, true) | board.getBitboard(Piece.KNIGHT, false));

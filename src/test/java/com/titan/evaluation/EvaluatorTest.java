@@ -72,4 +72,34 @@ class EvaluatorTest {
         Board endgame = FEN.parse("4k3/8/8/8/8/8/8/4K3 w - - 0 1");
         assertEquals(0, GamePhase.calculate(endgame));
     }
+
+    @Test
+    @DisplayName("Eval - Passed Pawn Bonus")
+    void testPassedPawn() {
+        // White has a passed pawn on e6, Black has none
+        String fen = "4k3/8/4P3/8/8/8/8/4K3 w - - 0 1";
+        Board board = FEN.parse(fen);
+        int score = Evaluator.evaluate(board);
+        assertTrue(score > 50, "White should have a significant advantage from the passed pawn");
+    }
+
+    @Test
+    @DisplayName("Eval - Isolated Pawn Penalty")
+    void testIsolatedPawn() {
+        // White has an isolated pawn on d4, Black's pawns are connected on e5, f5
+        String fen = "4k3/8/8/4pp2/3P4/8/8/4K3 w - - 0 1";
+        Board board = FEN.parse(fen);
+        int score = Evaluator.evaluate(board);
+        assertTrue(score < 0, "White's isolated pawn should result in a negative score");
+    }
+
+    @Test
+    @DisplayName("Eval - Rook on open file bonus")
+    void testRookOpenFile() {
+        // White rook on a1 (open file), black rook on h8 (blocked by pawns on h7 and h2)
+        String fen = "7r/7p/8/8/8/8/7P/R7 w - - 0 1";
+        Board board = FEN.parse(fen);
+        int score = Evaluator.evaluate(board);
+        assertTrue(score > 0, "White should have advantage due to open file");
+    }
 }
