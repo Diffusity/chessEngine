@@ -140,14 +140,166 @@ public class Evaluator {
         mgScore -= bPassedMG;
         egScore -= bPassedEG;
 
-        // 4. Tapered Phase Blending
+        // 4. King Safety (Pawn Shield) - only in middlegame
         int phase = GamePhase.calculate(board);
+        if (phase > 12) {
+            int wKingSq = Bits.lsb(board.getBitboard(Piece.KING, true));
+            int bKingSq = Bits.lsb(board.getBitboard(Piece.KING, false));
+            
+            // White King Shield
+            if (wKingSq != 64) {
+                int file = wKingSq & 7;
+                int rank = wKingSq >> 3;
+                if (rank < 7) {
+                    for (int f = Math.max(0, file - 1); f <= Math.min(7, file + 1); f++) {
+                        long shieldSq = Bits.toBitboard(Bits.toSquare(f, rank + 1));
+                        if ((shieldSq & whitePawns) == 0) {
+                            mgScore -= 10;
+                        }
+                    }
+                }
+            }
 
-        // phase ranges from 0 to 24.
-        // Score is from White's perspective at this point.
+            // Black King Shield
+            if (bKingSq != 64) {
+                int file = bKingSq & 7;
+                int rank = bKingSq >> 3;
+                if (rank > 0) {
+                    for (int f = Math.max(0, file - 1); f <= Math.min(7, file + 1); f++) {
+                        long shieldSq = Bits.toBitboard(Bits.toSquare(f, rank - 1));
+                        if ((shieldSq & blackPawns) == 0) {
+                            mgScore += 10;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 5. Piece Mobility and Rook Bonuses
+        long occupied = board.getAllPieces();
+        long whiteOccupied = board.getWhitePieces();
+        long blackOccupied = board.getBlackPieces();
+        
+        // Knights
+        long wn = board.getBitboard(Piece.KNIGHT, true);
+        while (wn != 0) {
+            int sq = Bits.lsb(wn);
+            long attacks = com.titan.movegen.Attacks.KNIGHT_ATTACKS[sq] & ~whiteOccupied;
+            int mob = Long.bitCount(attacks);
+            mgScore += mob * 2;
+            egScore += mob * 2;
+            wn &= wn - 1;
+        }
+        long bn = board.getBitboard(Piece.KNIGHT, false);
+        while (bn != 0) {
+            int sq = Bits.lsb(bn);
+            long attacks = com.titan.movegen.Attacks.KNIGHT_ATTACKS[sq] & ~blackOccupied;
+            int mob = Long.bitCount(attacks);
+            mgScore -= mob * 2;
+            egScore -= mob * 2;
+            bn &= bn - 1;
+        }
+
+        // Bishops
+        long wb = board.getBitboard(Piece.BISHOP, true);
+        while (wb != 0) {
+            int sq = Bits.lsb(wb);
+            long attacks = com.titan.movegen.Attacks.bishopAttacks(sq, occupied) & ~whiteOccupied;
+            int mob = Long.bitCount(attacks);
+            mgScore += mob * 3;
+            egScore += mob * 3;
+            wb &= wb - 1;
+        }
+        long bb = board.getBitboard(Piece.BISHOP, false);
+        while (bb != 0) {
+            int sq = Bits.lsb(bb);
+            long attacks = com.titan.movegen.Attacks.bishopAttacks(sq, occupied) & ~blackOccupied;
+            int mob = Long.bitCount(attacks);
+            mgScore -= mob * 3;
+            egScore -= mob * 3;
+            bb &= bb - 1;
+        }
+
+        // Rooks
+        long wr = board.getBitboard(Piece.ROOK, true);
+        while (wr != 0) {
+            int sq = Bits.lsb(wr);
+            long attacks = com.titan.movegen.Attacks.rookAttacks(sq, occupied) & ~whiteOccupied;
+            int mob = Long.bitCount(attacks);
+            mgScore += mob * 2;
+            egScore += mob * 2;
+
+            int file = sq & 7;
+            int rank = sq >> 3;
+            
+            // Open/Semi-open file
+            if ((whitePawns & Bits.File.MASKS[file]) == 0) {
+                if ((blackPawns & Bits.File.MASKS[file]) == 0) {
+                    mgScore += 20; egScore += 10; // Open file
+                } else {
+                    mgScore += 10; egScore += 5; // Semi-open file
+                }
+            }
+            
+            // 7th rank
+            if (rank == 6) {
+                mgScore += 20; egScore += 30;
+            }
+
+            wr &= wr - 1;
+        }
+        long br = board.getBitboard(Piece.ROOK, false);
+        while (br != 0) {
+            int sq = Bits.lsb(br);
+            long attacks = com.titan.movegen.Attacks.rookAttacks(sq, occupied) & ~blackOccupied;
+            int mob = Long.bitCount(attacks);
+            mgScore -= mob * 2;
+            egScore -= mob * 2;
+
+            int file = sq & 7;
+            int rank = sq >> 3;
+            
+            // Open/Semi-open file
+            if ((blackPawns & Bits.File.MASKS[file]) == 0) {
+                if ((whitePawns & Bits.File.MASKS[file]) == 0) {
+                    mgScore -= 20; egScore -= 10; // Open file
+                } else {
+                    mgScore -= 10; egScore -= 5; // Semi-open file
+                }
+            }
+            
+            // 7th rank
+            if (rank == 1) {
+                mgScore -= 20; egScore -= 30;
+            }
+
+            br &= br - 1;
+        }
+
+        // Queens
+        long wq = board.getBitboard(Piece.QUEEN, true);
+        while (wq != 0) {
+            int sq = Bits.lsb(wq);
+            long attacks = com.titan.movegen.Attacks.queenAttacks(sq, occupied) & ~whiteOccupied;
+            int mob = Long.bitCount(attacks);
+            mgScore += mob;
+            egScore += mob;
+            wq &= wq - 1;
+        }
+        long bq = board.getBitboard(Piece.QUEEN, false);
+        while (bq != 0) {
+            int sq = Bits.lsb(bq);
+            long attacks = com.titan.movegen.Attacks.queenAttacks(sq, occupied) & ~blackOccupied;
+            int mob = Long.bitCount(attacks);
+            mgScore -= mob;
+            egScore -= mob;
+            bq &= bq - 1;
+        }
+
+        // 6. Tapered Phase Blending
         int score = (mgScore * phase + egScore * (GamePhase.MAX_PHASE - phase)) / GamePhase.MAX_PHASE;
 
-        // 5. Return relative to the side to move (Negamax framework requires this)
+        // 7. Return relative to the side to move (Negamax framework requires this)
         return board.isWhiteToMove() ? score : -score;
     }
 }
