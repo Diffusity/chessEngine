@@ -59,24 +59,86 @@ public class Evaluator {
             egScore -= BISHOP_PAIR_BONUS;
         }
 
-        // 3. Simple Pawn Evaluation
+        // 3. Advanced Pawn Structure Evaluation
         long whitePawns = board.getBitboard(Piece.PAWN, true);
         long blackPawns = board.getBitboard(Piece.PAWN, false);
 
-        // Penalize doubled pawns (more than 1 pawn on the same file)
         int wDoubled = 0;
         int bDoubled = 0;
-        for (int file = 0; file < 8; file++) {
-            long fileMask = Bits.File.MASKS[file];
-            int wCount = Long.bitCount(whitePawns & fileMask);
-            int bCount = Long.bitCount(blackPawns & fileMask);
-            if (wCount > 1) wDoubled += (wCount - 1);
-            if (bCount > 1) bDoubled += (bCount - 1);
+        int wIsolated = 0;
+        int bIsolated = 0;
+        int wPassedMG = 0;
+        int wPassedEG = 0;
+        int bPassedMG = 0;
+        int bPassedEG = 0;
+
+        // Passed pawn bonuses based on rank (from their side's perspective)
+        // Ranks 1 to 8 (indices 0 to 7)
+        int[] passedBonusMG = {0, 5, 10, 20, 35, 60, 100, 0};
+        int[] passedBonusEG = {0, 10, 20, 40, 70, 120, 200, 0};
+
+        // Evaluate White Pawns
+        long wp = whitePawns;
+        while (wp != 0) {
+            int sq = Bits.lsb(wp);
+            int file = sq & 7;
+            int rank = sq >> 3;
+
+            // Doubled
+            if ((EvalBitboards.FRONT_SPAN_MASKS[1][sq] & whitePawns) != 0) {
+                wDoubled++;
+            }
+            // Isolated
+            if ((EvalBitboards.ADJACENT_FILE_MASKS[file] & whitePawns) == 0) {
+                wIsolated++;
+            }
+            // Passed
+            if ((EvalBitboards.PASSED_PAWN_MASKS[1][sq] & blackPawns) == 0) {
+                wPassedMG += passedBonusMG[rank];
+                wPassedEG += passedBonusEG[rank];
+            }
+
+            wp &= wp - 1;
         }
+
+        // Evaluate Black Pawns
+        long bp = blackPawns;
+        while (bp != 0) {
+            int sq = Bits.lsb(bp);
+            int file = sq & 7;
+            int rank = sq >> 3;
+
+            // Doubled
+            if ((EvalBitboards.FRONT_SPAN_MASKS[0][sq] & blackPawns) != 0) {
+                bDoubled++;
+            }
+            // Isolated
+            if ((EvalBitboards.ADJACENT_FILE_MASKS[file] & blackPawns) == 0) {
+                bIsolated++;
+            }
+            // Passed
+            if ((EvalBitboards.PASSED_PAWN_MASKS[0][sq] & whitePawns) == 0) {
+                int relativeRank = 7 - rank;
+                bPassedMG += passedBonusMG[relativeRank];
+                bPassedEG += passedBonusEG[relativeRank];
+            }
+
+            bp &= bp - 1;
+        }
+
         mgScore -= wDoubled * 15;
         egScore -= wDoubled * 20;
+        mgScore -= wIsolated * 15;
+        egScore -= wIsolated * 20;
+        mgScore += wPassedMG;
+        egScore += wPassedEG;
+
         mgScore += bDoubled * 15;
         egScore += bDoubled * 20;
+        mgScore += bIsolated * 15;
+        egScore += bIsolated * 20;
+        mgScore -= bPassedMG;
+        egScore -= bPassedEG;
 
         // 4. Tapered Phase Blending
         int phase = GamePhase.calculate(board);
