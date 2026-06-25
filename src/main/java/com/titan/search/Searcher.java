@@ -206,10 +206,18 @@ public class Searcher implements Search {
         }
         
         int staticEval = Evaluator.evaluate(board);
+        
+        // Reverse Futility Pruning (RFP)
+        if (!isPVNode && !inCheck && depth <= 3 && !Score.isMateScore(beta)) {
+            int rfpMargin = depth * 75;
+            if (staticEval - rfpMargin >= beta) {
+                return staticEval;
+            }
+        }
 
         // Null Move Pruning
         boolean hasNonPawnMaterial = board.hasNonPawnMaterial(board.isWhiteToMove());
-        if (allowNull && !inCheck && !isPVNode && depth >= 3 && hasNonPawnMaterial) {
+        if (allowNull && !inCheck && !isPVNode && depth >= 3 && hasNonPawnMaterial && staticEval >= beta) {
             board.makeNullMove();
             int R = 2; // reduction
             int score = -alphaBeta(depth - 1 - R, ply + 1, -beta, -beta + 1, false);
@@ -358,6 +366,11 @@ public class Searcher implements Search {
         for (int i = 0; i < captures.size(); i++) {
             MoveOrderer.pickMove(captures, moveScores, i);
             Move move = captures.get(i);
+            
+            // Quiescence SEE pruning (don't search losing captures)
+            if (!SEE.see(board, move, 0)) {
+                continue;
+            }
             
             board.makeMove(move);
             nodes++;

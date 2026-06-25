@@ -39,10 +39,11 @@ public class MoveOrderer {
             if (encoded == ttMove) {
                 scores[i] = TT_MOVE_SCORE;
             } else if (move.isCapture()) {
-                int score = mvvLva(board, move);
-                // For now, assume all captures are "winning" or equal. 
-                // A full SEE (Static Exchange Evaluation) is needed to classify losing captures.
-                scores[i] = WINNING_CAPTURE + score;
+                if (SEE.see(board, move, 0)) {
+                    scores[i] = WINNING_CAPTURE + mvvLva(board, move);
+                } else {
+                    scores[i] = LOSING_CAPTURE + mvvLva(board, move);
+                }
             } else if (move.isPromotion() && move.promoPiece() == Piece.QUEEN) {
                 scores[i] = QUEEN_PROMO;
             } else if (killers != null && killers.getFirst(ply) == encoded) {
