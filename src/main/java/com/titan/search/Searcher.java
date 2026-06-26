@@ -4,6 +4,7 @@ import com.titan.board.Board;
 import com.titan.board.Move;
 import com.titan.evaluation.Evaluator;
 import com.titan.movegen.MoveGenerator;
+import com.titan.tables.history.CounterMoveTable;
 import com.titan.tables.history.HistoryTable;
 import com.titan.tables.history.KillerTable;
 import com.titan.tables.tt.HashEntry;
@@ -32,6 +33,7 @@ public class Searcher implements Search {
     private TranspositionTable tt;
     private KillerTable killerTable;
     private HistoryTable historyTable;
+    private CounterMoveTable counterMoveTable;
     
     // Futility margins based on depth
     private static final int[] futilityMargin = { 0, 200, 300, 500 };
@@ -46,6 +48,7 @@ public class Searcher implements Search {
         this.tt = new TranspositionTable(64);
         this.killerTable = new KillerTable(MAX_DEPTH);
         this.historyTable = new HistoryTable();
+        this.counterMoveTable = new CounterMoveTable();
     }
 
     public void setBoard(Board board) {
@@ -63,6 +66,7 @@ public class Searcher implements Search {
         this.nodes = 0;
         this.searchStack.clear();
         this.killerTable.clear();
+        this.counterMoveTable.clear();
         
         this.tt.newSearch();
         this.historyTable.age();
@@ -239,8 +243,19 @@ public class Searcher implements Search {
             }
         }
         
+        int counterMove = 0;
+        if (ply > 0) {
+            Move prevMove = searchStack.get(ply - 1).currentMove;
+            if (prevMove != null) {
+                Piece prevPiece = board.pieceAt(prevMove.to());
+                if (prevPiece != null) {
+                    counterMove = counterMoveTable.get(board.isWhiteToMove(), prevPiece, prevMove.to());
+                }
+            }
+        }
+
         int[] moveScores = new int[moves.size()];
-        MoveOrderer.scoreMoves(moves, moveScores, board, ttMove, killerTable, ply, historyTable);
+        MoveOrderer.scoreMoves(moves, moveScores, board, ttMove, killerTable, ply, historyTable, counterMove);
 
         int movesSearched = 0;
         Move bestMove = null;
@@ -328,6 +343,17 @@ public class Searcher implements Search {
                                 historyTable.addMalus(board.isWhiteToMove(), prevMove.from(), prevMove.to(), depth);
                             }
                         }
+                        
+                        // Store counter-move
+                        if (ply > 0) {
+                            Move prevMove = searchStack.get(ply - 1).currentMove;
+                            if (prevMove != null) {
+                                Piece prevPiece = board.pieceAt(prevMove.to());
+                                if (prevPiece != null) {
+                                    counterMoveTable.store(board.isWhiteToMove(), prevPiece, prevMove.to(), move.encoded());
+                                }
+                            }
+                        }
                     }
                     
                     HashFlag flag = HashFlag.LOWER_BOUND;
@@ -378,7 +404,7 @@ public class Searcher implements Search {
         List<Move> captures = MoveGenerator.generateCaptures(board);
         
         int[] moveScores = new int[captures.size()];
-        MoveOrderer.scoreMoves(captures, moveScores, board, 0, null, ply, null);
+        MoveOrderer.scoreMoves(captures, moveScores, board, 0, null, ply, null, 0);
 
         for (int i = 0; i < captures.size(); i++) {
             MoveOrderer.pickMove(captures, moveScores, i);

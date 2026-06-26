@@ -19,6 +19,7 @@ public class MoveOrderer {
     static final int QUEEN_PROMO         =  7_000_000;
     static final int KILLER_1_SCORE      =  6_000_000;
     static final int KILLER_2_SCORE      =  5_000_000;
+    static final int COUNTER_MOVE_SCORE  =  4_000_000;
     static final int LOSING_CAPTURE      = -2_000_000;
 
     /**
@@ -28,7 +29,7 @@ public class MoveOrderer {
             List<Move> moves, int[] scores, Board board,
             int ttMove,
             KillerTable killers, int ply,
-            HistoryTable history) {
+            HistoryTable history, int counterMove) {
         
         boolean white = board.isWhiteToMove();
 
@@ -50,6 +51,8 @@ public class MoveOrderer {
                 scores[i] = KILLER_1_SCORE;
             } else if (killers != null && killers.getSecond(ply) == encoded) {
                 scores[i] = KILLER_2_SCORE;
+            } else if (encoded == counterMove) {
+                scores[i] = COUNTER_MOVE_SCORE;
             } else {
                 if (history != null) {
                     scores[i] = history.getScore(white, move.from(), move.to());
