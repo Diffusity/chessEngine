@@ -2,6 +2,7 @@ package com.titan.search;
 
 import com.titan.board.Board;
 import com.titan.board.Move;
+import com.titan.board.Piece;
 import com.titan.evaluation.Evaluator;
 import com.titan.movegen.MoveGenerator;
 import com.titan.tables.history.CounterMoveTable;
@@ -271,17 +272,20 @@ public class Searcher implements Search {
                 }
             }
 
-            // Late Move Pruning (LMP)
-            if (!isPVNode && !inCheck && depth <= 4 && move.isQuiet() && !Score.isMateScore(alpha) && !Score.isMateScore(beta)) {
-                int lmpThreshold = 3 + depth * depth;
-                if (movesSearched >= lmpThreshold) {
-                    continue; // Skip remaining quiet moves
-                }
-            }
-
             board.makeMove(move);
             nodes++;
             searchStack.get(ply).currentMove = move;
+            
+            boolean givesCheck = MoveGenerator.isInCheck(board, board.isWhiteToMove());
+            
+            // Late Move Pruning (LMP)
+            if (!isPVNode && !inCheck && !givesCheck && depth <= 4 && move.isQuiet() && !Score.isMateScore(alpha) && !Score.isMateScore(beta)) {
+                int lmpThreshold = 3 + depth * depth;
+                if (movesSearched >= lmpThreshold) {
+                    board.unmakeMove();
+                    continue; // Skip remaining quiet moves
+                }
+            }
             
             int score;
             

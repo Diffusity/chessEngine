@@ -17,6 +17,9 @@ import com.titan.board.Bits;
 public class Evaluator {
 
     public static final int BISHOP_PAIR_BONUS = 30;
+    
+    // Static pawn hash table (e.g., 16384 entries)
+    private static final com.titan.tables.PawnHashTable pawnHashTable = new com.titan.tables.PawnHashTable(16384);
 
     /**
      * Evaluates the given board position.
@@ -60,85 +63,101 @@ public class Evaluator {
         }
 
         // 3. Advanced Pawn Structure Evaluation
+        long pawnKey = board.pawnKey();
+        com.titan.tables.PawnHashTable.PawnEntry pawnEntry = pawnHashTable.probe(pawnKey);
+        
         long whitePawns = board.getBitboard(Piece.PAWN, true);
         long blackPawns = board.getBitboard(Piece.PAWN, false);
 
-        int wDoubled = 0;
-        int bDoubled = 0;
-        int wIsolated = 0;
-        int bIsolated = 0;
-        int wPassedMG = 0;
-        int wPassedEG = 0;
-        int bPassedMG = 0;
-        int bPassedEG = 0;
-
-        // Passed pawn bonuses based on rank (from their side's perspective)
-        // Ranks 1 to 8 (indices 0 to 7)
-        int[] passedBonusMG = {0, 5, 10, 20, 35, 60, 100, 0};
-        int[] passedBonusEG = {0, 10, 20, 40, 70, 120, 200, 0};
-
-        // Evaluate White Pawns
-        long wp = whitePawns;
-        while (wp != 0) {
-            int sq = Bits.lsb(wp);
-            int file = sq & 7;
-            int rank = sq >> 3;
-
-            // Doubled
-            if ((EvalBitboards.FRONT_SPAN_MASKS[1][sq] & whitePawns) != 0) {
-                wDoubled++;
+        int pawnMg = 0;
+        int pawnEg = 0;
+        
+        if (pawnEntry != null) {
+            pawnMg = pawnEntry.mgScore;
+            pawnEg = pawnEntry.egScore;
+        } else {
+            int wDoubled = 0;
+            int bDoubled = 0;
+            int wIsolated = 0;
+            int bIsolated = 0;
+            int wPassedMG = 0;
+            int wPassedEG = 0;
+            int bPassedMG = 0;
+            int bPassedEG = 0;
+    
+            // Passed pawn bonuses based on rank (from their side's perspective)
+            // Ranks 1 to 8 (indices 0 to 7)
+            int[] passedBonusMG = {0, 5, 10, 20, 35, 60, 100, 0};
+            int[] passedBonusEG = {0, 10, 20, 40, 70, 120, 200, 0};
+    
+            // Evaluate White Pawns
+            long wp = whitePawns;
+            while (wp != 0) {
+                int sq = Bits.lsb(wp);
+                int file = sq & 7;
+                int rank = sq >> 3;
+    
+                // Doubled
+                if ((EvalBitboards.FRONT_SPAN_MASKS[1][sq] & whitePawns) != 0) {
+                    wDoubled++;
+                }
+                // Isolated
+                if ((EvalBitboards.ADJACENT_FILE_MASKS[file] & whitePawns) == 0) {
+                    wIsolated++;
+                }
+                // Passed
+                if ((EvalBitboards.PASSED_PAWN_MASKS[1][sq] & blackPawns) == 0) {
+                    wPassedMG += passedBonusMG[rank];
+                    wPassedEG += passedBonusEG[rank];
+                }
+    
+                wp &= wp - 1;
             }
-            // Isolated
-            if ((EvalBitboards.ADJACENT_FILE_MASKS[file] & whitePawns) == 0) {
-                wIsolated++;
+    
+            // Evaluate Black Pawns
+            long bp = blackPawns;
+            while (bp != 0) {
+                int sq = Bits.lsb(bp);
+                int file = sq & 7;
+                int rank = sq >> 3;
+    
+                // Doubled
+                if ((EvalBitboards.FRONT_SPAN_MASKS[0][sq] & blackPawns) != 0) {
+                    bDoubled++;
+                }
+                // Isolated
+                if ((EvalBitboards.ADJACENT_FILE_MASKS[file] & blackPawns) == 0) {
+                    bIsolated++;
+                }
+                // Passed
+                if ((EvalBitboards.PASSED_PAWN_MASKS[0][sq] & whitePawns) == 0) {
+                    int relativeRank = 7 - rank;
+                    bPassedMG += passedBonusMG[relativeRank];
+                    bPassedEG += passedBonusEG[relativeRank];
+                }
+    
+                bp &= bp - 1;
             }
-            // Passed
-            if ((EvalBitboards.PASSED_PAWN_MASKS[1][sq] & blackPawns) == 0) {
-                wPassedMG += passedBonusMG[rank];
-                wPassedEG += passedBonusEG[rank];
-            }
-
-            wp &= wp - 1;
+    
+            pawnMg -= wDoubled * 15;
+            pawnEg -= wDoubled * 20;
+            pawnMg -= wIsolated * 15;
+            pawnEg -= wIsolated * 20;
+            pawnMg += wPassedMG;
+            pawnEg += wPassedEG;
+    
+            pawnMg += bDoubled * 15;
+            pawnEg += bDoubled * 20;
+            pawnMg += bIsolated * 15;
+            pawnEg += bIsolated * 20;
+            pawnMg -= bPassedMG;
+            pawnEg -= bPassedEG;
+            
+            pawnHashTable.store(pawnKey, pawnMg, pawnEg);
         }
-
-        // Evaluate Black Pawns
-        long bp = blackPawns;
-        while (bp != 0) {
-            int sq = Bits.lsb(bp);
-            int file = sq & 7;
-            int rank = sq >> 3;
-
-            // Doubled
-            if ((EvalBitboards.FRONT_SPAN_MASKS[0][sq] & blackPawns) != 0) {
-                bDoubled++;
-            }
-            // Isolated
-            if ((EvalBitboards.ADJACENT_FILE_MASKS[file] & blackPawns) == 0) {
-                bIsolated++;
-            }
-            // Passed
-            if ((EvalBitboards.PASSED_PAWN_MASKS[0][sq] & whitePawns) == 0) {
-                int relativeRank = 7 - rank;
-                bPassedMG += passedBonusMG[relativeRank];
-                bPassedEG += passedBonusEG[relativeRank];
-            }
-
-            bp &= bp - 1;
-        }
-
-        mgScore -= wDoubled * 15;
-        egScore -= wDoubled * 20;
-        mgScore -= wIsolated * 15;
-        egScore -= wIsolated * 20;
-        mgScore += wPassedMG;
-        egScore += wPassedEG;
-
-        mgScore += bDoubled * 15;
-        egScore += bDoubled * 20;
-        mgScore += bIsolated * 15;
-        egScore += bIsolated * 20;
-        mgScore -= bPassedMG;
-        egScore -= bPassedEG;
+        
+        mgScore += pawnMg;
+        egScore += pawnEg;
 
         // 4. King Safety (Pawn Shield) - only in middlegame
         int phase = GamePhase.calculate(board);

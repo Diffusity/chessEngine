@@ -492,12 +492,12 @@ public class Board {
 
     /** Returns the Zobrist hash key for the current position. */
     public long key() {
-        return state.key;
+        return state.getKey();
     }
 
-    /** Returns the pawn Zobrist hash key. */
+    /** Returns the Zobrist hash key for the pawn structure. */
     public long pawnKey() {
-        return state.pawnKey;
+        return state.getPawnKey();
     }
 
     // ========================
