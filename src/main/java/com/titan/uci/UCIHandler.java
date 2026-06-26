@@ -2,14 +2,11 @@ package com.titan.uci;
 
 import com.titan.engine.Engine;
 import com.titan.search.SearchLimits;
-import com.titan.utils.FEN;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 /**
- * Handles Universal Chess Interface (UCI) protocol communication.
+ * Handles communication via the Universal Chess Interface (UCI) protocol.
  */
 public class UCIHandler {
 
@@ -20,7 +17,7 @@ public class UCIHandler {
     }
 
     /**
-     * Starts the main UCI loop, reading from standard input.
+     * Starts the main UCI loop reading from standard input.
      */
     public void run() {
         Scanner scanner = new Scanner(System.in);
@@ -28,37 +25,27 @@ public class UCIHandler {
             String line = scanner.nextLine().trim();
             if (line.isEmpty()) continue;
 
-            String[] tokens = line.split("\\s+");
-            String command = tokens[0].toLowerCase();
+            UCICommand command = UCICommand.parse(line);
 
-            switch (command) {
-                case "uci":
-                    handleUCI();
-                    break;
-                case "isready":
-                    handleIsReady();
-                    break;
-                case "ucinewgame":
-                    handleNewGame();
-                    break;
-                case "position":
-                    handlePosition(line);
-                    break;
-                case "go":
-                    handleGo(line);
-                    break;
-                case "stop":
-                    handleStop();
-                    break;
-                case "setoption":
-                    handleSetOption(line);
-                    break;
-                case "quit":
-                    handleQuit();
-                    return; // Exit the loop
-                default:
-                    // Ignore unknown commands per UCI spec
-                    break;
+            if (command instanceof UCICommand.UCIInit) {
+                handleUCI();
+            } else if (command instanceof UCICommand.IsReady) {
+                handleIsReady();
+            } else if (command instanceof UCICommand.NewGame) {
+                handleNewGame();
+            } else if (command instanceof UCICommand.Position pos) {
+                engine.setPosition(pos.fen());
+                engine.applyMoves(pos.moves());
+            } else if (command instanceof UCICommand.Go go) {
+                go.limits().init(engine.getBoard().isWhiteToMove());
+                engine.startSearch(go.limits());
+            } else if (command instanceof UCICommand.Stop) {
+                engine.stopSearch();
+            } else if (command instanceof UCICommand.SetOption opt) {
+                engine.setOption(opt.name(), opt.value());
+            } else if (command instanceof UCICommand.Quit) {
+                engine.stopSearch();
+                return; // Exit loop
             }
         }
     }
@@ -77,112 +64,6 @@ public class UCIHandler {
 
     private void handleNewGame() {
         engine.newGame();
-    }
-
-    private void handlePosition(String line) {
-        String[] tokens = line.split("\\s+");
-        if (tokens.length < 2) return;
-
-        int movesIndex = -1;
-        for (int i = 0; i < tokens.length; i++) {
-            if (tokens[i].equals("moves")) {
-                movesIndex = i;
-                break;
-            }
-        }
-
-        // Set position
-        if (tokens[1].equals("startpos")) {
-            engine.newGame(); // Sets to starting FEN
-        } else if (tokens[1].equals("fen")) {
-            // Reconstruct FEN string
-            StringBuilder fenStr = new StringBuilder();
-            int end = movesIndex != -1 ? movesIndex : tokens.length;
-            for (int i = 2; i < end; i++) {
-                fenStr.append(tokens[i]).append(i < end - 1 ? " " : "");
-            }
-            try {
-                engine.setPosition(fenStr.toString());
-            } catch (Exception e) {
-                System.err.println("Failed to parse FEN: " + fenStr);
-                return;
-            }
-        }
-
-        // Apply moves if any
-        if (movesIndex != -1 && movesIndex + 1 < tokens.length) {
-            List<String> moves = new ArrayList<>();
-            for (int i = movesIndex + 1; i < tokens.length; i++) {
-                moves.add(tokens[i]);
-            }
-            engine.applyMoves(moves);
-        }
-    }
-
-    private void handleGo(String line) {
-        String[] tokens = line.split("\\s+");
-        SearchLimits limits = new SearchLimits();
-        
-        for (int i = 1; i < tokens.length; i++) {
-            String token = tokens[i];
-            try {
-                switch (token) {
-                    case "wtime":
-                        limits.wtime = Long.parseLong(tokens[++i]);
-                        break;
-                    case "btime":
-                        limits.btime = Long.parseLong(tokens[++i]);
-                        break;
-                    case "winc":
-                        limits.winc = Long.parseLong(tokens[++i]);
-                        break;
-                    case "binc":
-                        limits.binc = Long.parseLong(tokens[++i]);
-                        break;
-                    case "movestogo":
-                        limits.movestogo = Integer.parseInt(tokens[++i]);
-                        break;
-                    case "depth":
-                        limits.depth = Integer.parseInt(tokens[++i]);
-                        break;
-                    case "nodes":
-                        limits.nodes = Long.parseLong(tokens[++i]);
-                        break;
-                    case "movetime":
-                        limits.movetime = Long.parseLong(tokens[++i]);
-                        break;
-                    case "infinite":
-                        limits.infinite = true;
-                        break;
-                }
-            } catch (Exception e) {
-                // Ignore parse errors for individual parameters
-            }
-        }
-
-        limits.init(engine.getBoard().isWhiteToMove());
-        engine.startSearch(limits);
-    }
-
-    private void handleStop() {
-        engine.stopSearch();
-    }
-
-    private void handleSetOption(String line) {
-        String[] tokens = line.split("\\s+");
-        // setoption name <Name> [value <Value>]
-        if (tokens.length >= 3 && tokens[1].equalsIgnoreCase("name")) {
-            String name = tokens[2];
-            String value = "";
-            if (tokens.length >= 5 && tokens[3].equalsIgnoreCase("value")) {
-                value = tokens[4];
-            }
-            engine.setOption(name, value);
-        }
-    }
-
-    private void handleQuit() {
-        engine.stopSearch();
     }
 
     /**
