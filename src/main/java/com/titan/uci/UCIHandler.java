@@ -66,7 +66,8 @@ public class UCIHandler {
     private void handleUCI() {
         send("id name Titan v1.0.0");
         send("id author Titan Team");
-        send("option name Hash type spin default 64 min 1 max 2048");
+        send("option name Hash type spin default 64 min 1 max 1024");
+        send("option name Threads type spin default 1 min 1 max 1");
         send("uciok");
     }
 
@@ -169,14 +170,14 @@ public class UCIHandler {
 
     private void handleSetOption(String line) {
         String[] tokens = line.split("\\s+");
-        // setoption name Hash value <MB>
-        if (tokens.length >= 5 && tokens[1].equalsIgnoreCase("name") && tokens[2].equalsIgnoreCase("Hash") && tokens[3].equalsIgnoreCase("value")) {
-            try {
-                int sizeMB = Integer.parseInt(tokens[4]);
-                engine.setHashSize(sizeMB);
-            } catch (NumberFormatException e) {
-                // Ignore invalid values
+        // setoption name <Name> [value <Value>]
+        if (tokens.length >= 3 && tokens[1].equalsIgnoreCase("name")) {
+            String name = tokens[2];
+            String value = "";
+            if (tokens.length >= 5 && tokens[3].equalsIgnoreCase("value")) {
+                value = tokens[4];
             }
+            engine.setOption(name, value);
         }
     }
 

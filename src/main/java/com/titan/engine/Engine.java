@@ -18,10 +18,12 @@ public class Engine {
     private Board board;
     private final Searcher searcher;
     private Thread searchThread;
+    private final EngineConfig config;
 
     public Engine() {
         this.board = new Board();
         this.searcher = new Searcher(this.board);
+        this.config = new EngineConfig();
         newGame();
     }
 
@@ -116,6 +118,16 @@ public class Engine {
      */
     public void setHashSize(int sizeMB) {
         searcher.getTranspositionTable().resize(sizeMB);
+    }
+    
+    /**
+     * Sets an engine option.
+     */
+    public void setOption(String name, String value) {
+        config.setOption(name, value);
+        if (name.equalsIgnoreCase("hash")) {
+            setHashSize(config.getHashSizeMB());
+        }
     }
 
     public Board getBoard() {
