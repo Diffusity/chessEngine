@@ -234,6 +234,17 @@ public class Searcher implements Search {
                 return beta;
             }
         }
+        
+        // Internal Iterative Deepening (IID)
+        if (isPVNode && ttMove == 0 && depth >= 5) {
+            int iidDepth = depth - 2;
+            alphaBeta(iidDepth, ply, alpha, beta, false);
+            
+            HashEntry ttEntryAfterIID = tt.probe(board.key(), ply);
+            if (ttEntryAfterIID != null) {
+                ttMove = ttEntryAfterIID.move;
+            }
+        }
 
         List<Move> moves = MoveGenerator.generateLegalMoves(board);
         if (moves.isEmpty()) {
