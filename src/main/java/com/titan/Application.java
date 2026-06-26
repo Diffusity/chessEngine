@@ -11,7 +11,17 @@ import com.titan.uci.UCIHandler;
 public class Application {
 
     public static void main(String[] args) {
-        UCIHandler handler = new UCIHandler();
-        handler.run();
+        if (args.length > 0 && args[0].equals("bench")) {
+            int depth = 8;
+            if (args.length > 1) {
+                try {
+                    depth = Integer.parseInt(args[1]);
+                } catch (NumberFormatException ignored) {}
+            }
+            com.titan.utils.Bench.run(depth);
+        } else {
+            UCIHandler handler = new UCIHandler();
+            handler.run();
+        }
     }
 }
