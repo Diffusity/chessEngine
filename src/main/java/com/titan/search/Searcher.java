@@ -256,6 +256,14 @@ public class Searcher implements Search {
                 }
             }
 
+            // Late Move Pruning (LMP)
+            if (!isPVNode && !inCheck && depth <= 4 && move.isQuiet() && !Score.isMateScore(alpha) && !Score.isMateScore(beta)) {
+                int lmpThreshold = 3 + depth * depth;
+                if (movesSearched >= lmpThreshold) {
+                    continue; // Skip remaining quiet moves
+                }
+            }
+
             board.makeMove(move);
             nodes++;
             searchStack.get(ply).currentMove = move;
@@ -264,8 +272,17 @@ public class Searcher implements Search {
             
             // Late Move Reductions (LMR)
             boolean fullSearch = true;
-            if (depth >= 3 && movesSearched >= 3 && move.isQuiet() && !inCheck && !isPVNode) {
+            if (depth >= 3 && movesSearched >= 2 && move.isQuiet() && !inCheck && !isPVNode) {
                 int reduction = (int) (1 + Math.log(depth) * Math.log(movesSearched) / 2.0);
+                
+                // History-tuned reduction
+                int histScore = historyTable.getScore(board.isWhiteToMove(), move.from(), move.to());
+                if (histScore > 0) {
+                    reduction -= 1; // Good history -> search deeper
+                } else if (histScore < 0) {
+                    reduction += 1; // Bad history -> reduce more
+                }
+                
                 if (reduction < 0) reduction = 0;
                 int reducedDepth = Math.max(0, depth - 1 - reduction);
                 
