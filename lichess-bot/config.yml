@@ -8,6 +8,11 @@ engine:
   # The command to launch the engine
   # lichess-bot will pipe UCI commands via stdin/stdout
   command: "java -jar {dir}/{name}"
+  
+  # UCI options
+  uci_options:
+    Hash: 128
+    Threads: 1
 
 challenge:
   accept:
