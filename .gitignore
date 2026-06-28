@@ -31,3 +31,6 @@ desktop.ini
 
 # Dependency reduced POM
 dependency-reduced-pom.xml
+
+# External lichess-bot clone (not part of this project)
+lichess-bot-repo/
