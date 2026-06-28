@@ -1,26 +1,39 @@
 # Deploying Titan Chess Engine to Lichess
 
 This guide explains how to deploy the Titan Chess Engine to Lichess so users can play against it.
-We use the official [lichess-bot](https://github.com/lichess-org/lichess-bot) Python client to act as a bridge between the Lichess API and Titan's UCI interface.
+We use the official [lichess-bot](https://github.com/lichess-bot-devs/lichess-bot) bridge to connect the engine's UCI interface to the Lichess Bot API.
 
 ## Prerequisites
 
 1. **Java 17+**: Required to run the Titan engine JAR.
-2. **Python 3.7+**: Required to run `lichess-bot`.
-3. **Lichess Account**: A dedicated Lichess account for the bot.
+2. **Python 3.10+**: Required to run `lichess-bot`.
+3. **Git**: Required to clone the `lichess-bot` repository.
+4. **Lichess Account**: A **dedicated** Lichess account for the bot (do **not** use your personal account).
 
-## Step 1: Create a Bot Account on Lichess
+## Step 1: Create a Lichess API Token
 
-1. Create a new account on [lichess.org](https://lichess.org) (do **not** use your personal account).
-2. Once created and logged in, upgrade the account to a BOT account by generating an API token:
-   - Go to [lichess.org/account/oauth/token](https://lichess.org/account/oauth/token).
-   - Create a token with the following scopes:
-     - `Read incoming challenges`
-     - `Create, accept, decline challenges`
-     - `Play games with the bot API`
-   - Copy the generated token. **Important**: The token is only shown once!
+1. Log in to the dedicated bot account on [lichess.org](https://lichess.org).
+2. Go to [lichess.org/account/oauth/token](https://lichess.org/account/oauth/token).
+3. Create a token with the following scopes:
+   - `Read incoming challenges` (`challenge:read`)
+   - `Send, accept and reject challenges` (`challenge:write`)
+   - `Play games using the Bot API` (`bot:play`)
+4. Copy the generated token. **Important**: The token is only shown once!
 
-## Step 2: Build the Engine
+## Step 2: Upgrade to a BOT Account
+
+A Lichess account must be upgraded to a BOT account before it can be used with `lichess-bot`.
+**Warning**: This is irreversible — the account can no longer play games manually.
+
+Run the following command, replacing `YOUR_TOKEN` with the token from Step 1:
+
+```bash
+curl -d "" https://lichess.org/api/bot/account/upgrade -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+> **Note**: Make sure to use `https://` — plain `http://` will fail with a 301 redirect.
+
+## Step 3: Build the Engine
 
 Compile the Titan Chess Engine into a fat JAR:
 
@@ -30,45 +43,80 @@ mvn clean package
 
 This will create `target/titan-chess-engine-1.0.0-SNAPSHOT.jar`.
 
-## Step 3: Configure lichess-bot
+## Step 4: Clone and Configure lichess-bot
 
-A pre-configured `lichess-bot` directory is provided in the repository.
+1. From the project root, clone the official `lichess-bot` repository:
+   ```bash
+   git clone https://github.com/lichess-bot-devs/lichess-bot.git lichess-bot-repo
+   ```
 
-1. Navigate to the `lichess-bot` directory.
-2. Install the required Python dependencies:
+2. Navigate into the cloned directory and set up a Python virtual environment:
+   ```bash
+   cd lichess-bot-repo
+   python -m venv venv
+   ```
+
+3. Activate the virtual environment:
+   - **Windows (PowerShell)**: `venv\Scripts\activate`
+   - **Linux / macOS**: `source venv/bin/activate`
+
+4. Install the required Python dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-3. Open `config.yml` and replace `YOUR_LICHESS_BOT_API_TOKEN` with the API token you generated in Step 1:
+
+5. Copy the default configuration and edit it:
+   ```bash
+   cp config.yml.default config.yml
+   ```
+
+6. Open `config.yml` and make the following changes:
+
+   **Set your API token and URL:**
    ```yaml
    token: "YOUR_LICHESS_BOT_API_TOKEN"
+   url: "https://lichess.org/"
    ```
-4. Adjust the `challenge` settings in `config.yml` if you want to restrict the time controls or variants the bot accepts.
 
-## Step 4: Run the Bot
+   **Configure the engine to use Titan's JAR via Java:**
+   ```yaml
+   engine:
+     dir: "../target"
+     name: "titan-chess-engine-1.0.0-SNAPSHOT.jar"
+     interpreter: "java"
+     interpreter_options:
+       - "-jar"
+     protocol: "uci"
+   ```
 
-Start the bot using the provided script (which builds the engine and runs the python bot), or manually:
+   **Set only the UCI options that Titan supports** (`Hash` and `Threads`).
+   Remove or comment out any others (e.g., `Move Overhead`, `SyzygyPath`, `UCI_ShowWDL`):
+   ```yaml
+   uci_options:
+     Threads: 1
+     Hash: 128
+   ```
 
-### Option A: Manual
+## Step 5: Run the Bot
 
-From the `lichess-bot` directory, run:
+From the `lichess-bot-repo` directory (with the virtual environment activated), run:
 
 ```bash
-python run.py
+python lichess-bot.py
 ```
 
-### Option B: Background Service (Linux)
+### Running in the Background (Linux)
 
-For 24/7 deployment, use `systemd` or a terminal multiplexer like `tmux` or `screen`.
+For 24/7 deployment, use a terminal multiplexer like `tmux` or `screen`:
 
-Example with `tmux`:
 ```bash
 tmux new -s titan-bot
-cd lichess-bot
-python run.py
+cd lichess-bot-repo
+source venv/bin/activate
+python lichess-bot.py
 # Press Ctrl+B, then D to detach
 ```
 
-## Step 5: Challenge the Bot
+## Step 6: Challenge the Bot
 
 Once the script is running, log in to Lichess with your personal account, go to the bot's profile, and click the crossed swords icon to challenge it to a game!
