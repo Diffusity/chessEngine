@@ -43,6 +43,9 @@ public class Searcher implements Search {
     // Futility margins based on depth
     private static final int[] futilityMargin = { 0, 200, 300, 500 };
 
+    /** Maximum check extensions allowed on any single search path. */
+    private static final int MAX_CHECK_EXTENSIONS = 8;
+
     /**
      * Precomputed Late Move Reduction table: LMR[depth][moveNumber]. Replaces per-move
      * {@code Math.log} calls in the hot path.
@@ -237,9 +240,15 @@ public class Searcher implements Search {
             return Score.DRAW;
         }
 
+        SearchStack.Entry sse = searchStack.get(ply);
+
         boolean inCheck = MoveGenerator.isInCheck(board, board.isWhiteToMove());
-        if (inCheck) {
+        int parentExtensions = ply > 0 ? searchStack.get(ply - 1).extensionsUsed : 0;
+        if (inCheck && parentExtensions < MAX_CHECK_EXTENSIONS) {
             depth++;
+            sse.extensionsUsed = parentExtensions + 1;
+        } else {
+            sse.extensionsUsed = parentExtensions;
         }
 
         if (depth <= 0) {
@@ -288,8 +297,6 @@ public class Searcher implements Search {
             depth--;
         }
 
-        SearchStack.Entry sse = searchStack.get(ply);
-
         // Static evaluation — reuse the cached value from the TT when available,
         // otherwise evaluate and cache it (eval-only entry) for future visits.
         int staticEval;
@@ -316,6 +323,16 @@ public class Searcher implements Search {
             int rfpMargin = depth * (improving ? 85 : 65);
             if (staticEval - rfpMargin >= beta) {
                 return staticEval;
+            }
+        }
+
+        // Razoring — deep deficit below alpha at low depth: verify with a null-window
+        // quiescence; if even all captures cannot reach alpha, the node is hopeless.
+        if (!isPVNode && !inCheck && depth <= 4 && !Score.isMateScore(alpha)
+                && staticEval + 450 * depth < alpha) {
+            int razorScore = quiescence(alpha, alpha + 1, ply);
+            if (razorScore < alpha) {
+                return razorScore;
             }
         }
 
@@ -369,6 +386,20 @@ public class Searcher implements Search {
         for (int i = 0; i < moves.size(); i++) {
             MoveOrderer.pickMove(moves, moveScores, i);
             Move move = moves.get(i);
+
+            // SEE-based pruning in main search: at low depth skip quiets and losing
+            // captures whose exchange sequence loses more than the margin allows.
+            // (moveScores < 0 marks the LOSING_CAPTURE band assigned during ordering.)
+            if (!isPVNode && !inCheck && depth <= 10 && movesSearched > 0
+                    && !Score.isMateScore(alpha)) {
+                boolean quiet = move.isQuiet();
+                if (quiet || moveScores[i] < 0) {
+                    int threshold = quiet ? -45 * depth : -20 * depth * depth + 15;
+                    if (!SEE.see(board, move, threshold)) {
+                        continue;
+                    }
+                }
+            }
 
             // Futility Pruning
             if (!isPVNode && !inCheck && depth <= 3 && move.isQuiet() && movesSearched > 0 && !Score.isMateScore(alpha) && !Score.isMateScore(beta)) {

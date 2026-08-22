@@ -18,6 +18,8 @@ public class SearchStack {
         public int staticEval;
         public Move currentMove;
         public Piece movedPiece;
+        /** Check extensions consumed on the path up to and including this ply. */
+        public int extensionsUsed;
         public Move[] killers = new Move[2];
         /** Quiets actually searched at this ply — reused across nodes to avoid allocation. */
         public final List<Move> searchedQuiets = new ArrayList<>();

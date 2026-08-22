@@ -63,8 +63,15 @@ Checkpoint: ≥ 2M NPS on `bench 8`; all perft suites green.
       Medians (5 runs): startpos d10 306→260ms & 144k→102k nodes; kiwipete d10 424→482ms
       (cost of correct evasion handling in check-dense position); tactics now solves
       mate-in-3. All 92 tests green. SPRT to arbitrate before tuning further.
-- [ ] Batch 3: staged MovePicker w/ skip-quiets + SEE good/bad-noisy split; SEE quiet/noisy
-      pruning in main search; razoring; singular extensions; check-extension capping
+- [x] **Batch 3 (2026-08-22)**: SEE-based pruning in main search (quiets at −45·depth
+      threshold; bad-noisies via ordering's LOSING band at −20·d²+15, depth ≤ 10, non-PV);
+      razoring (null-window qsearch verify when staticEval + 450·depth < alpha, d ≤ 4);
+      check-extension capping (≤ 8 per path via SearchStack counter).
+      Medians vs Batch 2: startpos d10 232→200ms & 102k→74k nodes; kiwipete nodes 266k→212k;
+      mate-in-3 still found. All 92 tests green.
+- [ ] Batch 4 (deferred from 3): staged MovePicker w/ skip-quiets + SEE good/bad-noisy split;
+      singular extensions; history leaf pruning (needs tuning); SPRT harness before further
+      parameter tuning
 
 ## Phase 3 — NNUE (after Phase 2 stabilizes)
 - [ ] Accumulator infra wired into make/unmake; Vector API inference kernel
