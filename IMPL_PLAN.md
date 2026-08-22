@@ -47,14 +47,18 @@ search per move at equal clock. All 92 tests green incl. full perft suite + magi
 Checkpoint: ≥ 2M NPS on `bench 8`; all perft suites green.
 
 ## Phase 2 — search parity (weeks; ship each behind SPRT)
-- [ ] Mate-distance pruning; IIR replacing IID; razoring
-- [ ] Improving heuristic; improving-aware RFP/futility/LMP margins
-- [ ] Adaptive NMP (base + depth/divisor + eval-scale; no consecutive NMP; mate clamp)
-- [ ] Staged MovePicker w/ GOOD_NOISY/BAD_NOISY/QUIET + skip-quiets flag
-- [ ] Capture history + 1&2-ply continuation history; fix malus-over-pruned-moves bug
-- [ ] QSearch: TT probe/store, delta pruning, in-check evasion gen, promo inclusion
-- [ ] Aspiration widening + fail-high depth reduction; LMR table + check awareness
-- [ ] SEE quiet/noisy pruning in main search; TT static-eval caching
+- [x] **Batch 1 (2026-08-22)**: Mate-distance pruning; IIR replacing IID (with cutNode
+      plumbing through PVS/NMP); improving heuristic feeding RFP/LMP margins; adaptive NMP
+      (base + depth/6 + eval-scale R, mate clamp, beta-mate guard); LMR precomputed table +
+      never-reduce-checks; aspiration windows with geometric widening AND fail-high depth
+      reduction; history malus applied only to actually-searched quiets; nodes counted at
+      node entry; LMP extended to depth 6.
+      Measured: startpos d10 nodes 307k→144k (−53%), time 559ms→427ms; bench8 nodes −57%;
+      tactics position now finds mate-in-3 at d8 (baseline missed it). All 92 tests green.
+- [ ] Batch 2: qsearch TT probe/store + delta pruning + in-check evasion generation;
+      TT static-eval caching; staged MovePicker w/ skip-quiets; capture history;
+      1&2-ply continuation history; check-extension capping
+- [ ] Batch 3: SEE quiet/noisy pruning in main search; singular extensions; multicut
 
 ## Phase 3 — NNUE (after Phase 2 stabilizes)
 - [ ] Accumulator infra wired into make/unmake; Vector API inference kernel

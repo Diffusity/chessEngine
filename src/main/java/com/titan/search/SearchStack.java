@@ -2,6 +2,9 @@ package com.titan.search;
 
 import com.titan.board.Move;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Pre-allocated per-ply search state.
  */
@@ -14,12 +17,15 @@ public class SearchStack {
         public int staticEval;
         public Move currentMove;
         public Move[] killers = new Move[2];
+        /** Quiets actually searched at this ply — reused across nodes to avoid allocation. */
+        public final List<Move> searchedQuiets = new ArrayList<>();
 
         public void clear() {
             staticEval = Score.NONE;
             currentMove = null;
             killers[0] = null;
             killers[1] = null;
+            searchedQuiets.clear();
         }
     }
 
