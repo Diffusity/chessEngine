@@ -63,12 +63,15 @@ public class Searcher implements Search {
     @Override
     public SearchResult search(Board board, SearchLimits limits) {
         this.limits = limits;
+        if (limits.startTime == 0) {
+            limits.startTime = System.nanoTime();
+        }
         this.stopped = false;
         this.nodes = 0;
         this.searchStack.clear();
         this.killerTable.clear();
         this.counterMoveTable.clear();
-        
+
         this.tt.newSearch();
         this.historyTable.age();
 
@@ -77,7 +80,22 @@ public class Searcher implements Search {
             pvLength[i] = 0;
         }
 
-        return iterativeDeepening();
+        List<Move> rootMoves = MoveGenerator.generateLegalMoves(board);
+        if (rootMoves.isEmpty()) {
+            return new SearchResult(null, Score.NONE, 0, 0,
+                    (System.nanoTime() - limits.startTime) / 1_000_000, List.of());
+        }
+        // Fallback move: TT move if available, else the first legal move.
+        // Guarantees we never emit "bestmove 0000" while legal moves exist.
+        Move fallbackMove = rootMoves.get(0);
+        HashEntry rootEntry = tt.probe(board.key(), 0);
+        if (rootEntry != null && rootEntry.move != 0) {
+            Move ttRootMove = Move.fromEncoded(rootEntry.move);
+            if (ttRootMove != null && rootMoves.contains(ttRootMove)) {
+                fallbackMove = ttRootMove;
+            }
+        }
+        return iterativeDeepening(fallbackMove);
     }
 
     @Override
@@ -85,12 +103,12 @@ public class Searcher implements Search {
         this.stopped = true;
     }
 
-    private SearchResult iterativeDeepening() {
+    private SearchResult iterativeDeepening(Move fallbackMove) {
         int targetDepth = limits.depth > 0 ? limits.depth : MAX_DEPTH;
-        Move bestMove = null;
+        Move bestMove = fallbackMove;
         int bestScore = Score.NONE;
         int depthReached = 0;
-        
+
         int alpha = -Score.INFINITY;
         int beta = Score.INFINITY;
 
@@ -111,7 +129,9 @@ public class Searcher implements Search {
             }
 
             bestScore = score;
-            bestMove = pvTable[0][0];
+            if (pvTable[0][0] != null) {
+                bestMove = pvTable[0][0];
+            }
             depthReached = depth;
             
             // Set up aspiration window for next depth

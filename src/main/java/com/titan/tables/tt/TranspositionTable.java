@@ -9,7 +9,7 @@ public class TranspositionTable {
 
     private HashEntry[] table;
     private int mask;
-    private byte currentAge;
+    private int currentAge;
     private int sizeMB;
 
     public TranspositionTable(int sizeMB) {

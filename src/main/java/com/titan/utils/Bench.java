@@ -24,30 +24,44 @@ public class Bench {
         System.out.println("Target Depth: " + targetDepth);
         System.out.println();
 
+        Board board = FEN.parse(FENS[0]);
+        Searcher searcher = new Searcher(board);
+
+        // Warm-up searches to trigger JIT compilation before timing.
+        for (int i = 0; i < 3; i++) {
+            runSingle(searcher, FENS[i % FENS.length], Math.min(6, targetDepth), false);
+        }
+
         long totalNodes = 0;
         long totalTime = 0;
 
         for (int i = 0; i < FENS.length; i++) {
-            Board board = FEN.parse(FENS[i]);
-            Searcher searcher = new Searcher(board);
-
-            SearchLimits limits = new SearchLimits();
-            limits.depth = targetDepth;
-
-            long start = System.currentTimeMillis();
-            SearchResult result = searcher.search(board, limits);
-            long end = System.currentTimeMillis();
-
-            long time = end - start;
+            SearchResult result = runSingle(searcher, FENS[i], targetDepth, true);
             totalNodes += result.nodes();
-            totalTime += time;
-
-            System.out.printf("Position %d: nodes %d time %dms\n", (i + 1), result.nodes(), time);
+            totalTime += result.timeMs();
         }
 
         System.out.println();
         System.out.println("===================================");
         long nps = (totalTime > 0) ? (totalNodes * 1000L / totalTime) : 0;
         System.out.printf("Total: %d nodes in %dms (%d nps)\n", totalNodes, totalTime, nps);
+    }
+
+    private static SearchResult runSingle(Searcher searcher, String fen, int depth, boolean verbose) {
+        Board board = FEN.parse(fen);
+        searcher.setBoard(board);
+
+        SearchLimits limits = SearchLimits.fixedDepth(depth);
+        limits.init(board.isWhiteToMove());
+
+        long start = System.currentTimeMillis();
+        SearchResult result = searcher.search(board, limits);
+        long time = System.currentTimeMillis() - start;
+
+        if (verbose) {
+            System.out.printf("%s: nodes %d time %dms\n",
+                    fen.split(" ")[0], result.nodes(), time);
+        }
+        return result;
     }
 }

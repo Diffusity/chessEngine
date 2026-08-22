@@ -132,7 +132,21 @@ public final class Zobrist {
     // ========================
 
     /**
-     * Computes the full Zobrist key for a position from scratch.
+     * Returns true if any pawn of the side that could capture en passant actually
+     * attacks the given EP target square.
+     */
+    private static boolean canCaptureEnPassant(Board board, int epSquare) {
+        // The capturing pawns belong to the side NOT making the double push,
+        // i.e. the side to move. White capturers sit below the target (use the
+        // black attack pattern from the target), and vice versa.
+        boolean whiteToMove = board.isWhiteToMove();
+        long capturers = board.getBitboard(Piece.PAWN, whiteToMove);
+        int patternIndex = whiteToMove ? 1 : 0; // reverse pattern
+        return (com.titan.movegen.Attacks.PAWN_ATTACKS[patternIndex][epSquare] & capturers) != 0;
+    }
+
+    /**
+     * Computes a full Zobrist key for a position from scratch.
      * This is used during initialization (e.g., when loading a FEN string).
      * During gameplay, the key is updated incrementally in makeMove/unmakeMove.
      *
@@ -154,8 +168,13 @@ public final class Zobrist {
         // Hash castling rights
         key ^= castlingKey(board.getState().getCastlingRights());
 
-        // Hash en passant
-        key ^= enPassantKey(board.getState().getEnPassantSquare());
+        // Hash en passant — only when a capture is genuinely possible, matching
+        // Board.makePawnDoubleMove semantics so identical positions share one key
+        // regardless of whether they arrived via moves or via FEN.
+        int epSquare = board.getState().getEnPassantSquare();
+        if (epSquare != Bits.Square.NONE && canCaptureEnPassant(board, epSquare)) {
+            key ^= enPassantKey(epSquare);
+        }
 
         // Hash side to move
         if (!board.isWhiteToMove()) {

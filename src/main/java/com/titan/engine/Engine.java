@@ -105,10 +105,16 @@ public class Engine {
     public void stopSearch() {
         if (searchThread != null && searchThread.isAlive()) {
             searcher.stop();
-            try {
-                searchThread.join(2000); // Wait max 2 seconds
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+            while (searchThread.isAlive()) {
+                try {
+                    // The searcher checks the stop flag every 2048 nodes, so this
+                    // loop exits quickly. Waiting unconditionally prevents a new
+                    // search from racing a lingering old one on the shared board.
+                    searchThread.join(500);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
             }
         }
     }

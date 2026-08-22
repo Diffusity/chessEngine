@@ -44,8 +44,12 @@ public class Board {
     /** The current board state (castling, EP, halfmove clock, Zobrist key, etc.). */
     private BoardState state;
 
-    /** Stack of saved board states for unmakeMove(). */
+    /** Stack of saved board states for unmakeMove(). Slots are recycled from {@link #stateFreeList}. */
     private BoardState[] stateHistory;
+
+    /** Pool of unused BoardState objects handed out on make and returned on unmake. */
+    private BoardState[] stateFreeList;
+    private int stateFreeCount;
 
     /** Stack of moves made so far. */
     private Move[] moveHistory;
@@ -74,6 +78,13 @@ public class Board {
         this.mailbox      = new Piece[Bits.Square.COUNT];
         this.pieceColors  = new boolean[Bits.Square.COUNT];
         this.stateHistory = new BoardState[MAX_PLY];
+        this.stateFreeList = new BoardState[MAX_PLY + 1];
+        for (int i = 0; i < MAX_PLY + 1; i++) {
+            stateFreeList[i] = new BoardState();
+        }
+        this.stateFreeCount = MAX_PLY + 1;
+        // Take the live state out of the pool
+        this.state = stateFreeList[--stateFreeCount];
         this.moveHistory  = new Move[MAX_PLY];
         this.keyHistory   = new long[MAX_PLY];
         this.state        = new BoardState();
@@ -190,8 +201,11 @@ public class Board {
 
         if (piece == null) return false;
 
-        // Save state for undo
-        stateHistory[ply] = state.copy();
+        // Save state for undo: snapshot into a recycled object guaranteed distinct
+        // from the live `state` (free-list invariant), so no aliasing occurs.
+        BoardState snap = stateFreeList[--stateFreeCount];
+        state.copyInto(snap);
+        stateHistory[ply] = snap;
         keyHistory[ply] = state.key;
 
         // Remove old en passant key from hash
@@ -252,8 +266,14 @@ public class Board {
 
     private void makePawnDoubleMove(int from, int to) {
         movePiece(Piece.PAWN, from, to, white);
-        // Set en passant square (the square the pawn "passed through")
-        state.enPassantSquare = from + (white ? 8 : -8);
+        // Set en passant square only if an enemy pawn could actually capture there.
+        // Otherwise leave NONE so functionally identical positions share one Zobrist
+        // key (better TT hits + correct repetition detection).
+        int epSq = from + (white ? 8 : -8);
+        long enemyPawns = getBitboard(Piece.PAWN, !white);
+        if ((com.titan.movegen.Attacks.PAWN_ATTACKS[white ? 0 : 1][epSq] & enemyPawns) != 0) {
+            state.enPassantSquare = epSq;
+        }
     }
 
     private void makeCastlingMove(int from, int to) {
@@ -330,7 +350,10 @@ public class Board {
             unmakeStandardMove(from, to, captured);
         }
 
-        // Restore state
+        // Restore state, recycling the now-dead post-move object back to the pool.
+        // The dead object is returned BEFORE `state` re-aliases the snapshot, so the
+        // free-list never contains an active object (no self-copy on the next make).
+        stateFreeList[stateFreeCount++] = state;
         state = savedState;
 
         // Restore full move number
@@ -389,7 +412,9 @@ public class Board {
      * Used in Null Move Pruning (search optimization).
      */
     public void makeNullMove() {
-        stateHistory[ply] = state.copy();
+        BoardState snap = stateFreeList[--stateFreeCount];
+        state.copyInto(snap);
+        stateHistory[ply] = snap;
         keyHistory[ply] = state.key;
         moveHistory[ply] = null;
 
@@ -409,6 +434,7 @@ public class Board {
     public void unmakeNullMove() {
         white = !white;
         ply--;
+        stateFreeList[stateFreeCount++] = state;
         state = stateHistory[ply];
     }
 
@@ -714,3 +740,5 @@ public class Board {
         return sb.toString();
     }
 }
+
+

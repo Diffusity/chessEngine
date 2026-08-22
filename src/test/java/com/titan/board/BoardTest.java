@@ -305,8 +305,9 @@ class BoardTest {
         // Side to move should flip
         assertFalse(board.isWhiteToMove());
 
-        // En passant square should be e3
-        assertEquals(Bits.Square.E3, board.getState().getEnPassantSquare());
+        // En passant square should NOT be set: no black pawn can capture onto e3.
+        // Conditional EP hashing keeps identical positions sharing one Zobrist key.
+        assertEquals(Bits.Square.NONE, board.getState().getEnPassantSquare());
 
         // Key should have changed
         assertNotEquals(keyBefore, board.key());

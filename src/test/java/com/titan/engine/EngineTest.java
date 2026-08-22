@@ -39,8 +39,10 @@ class EngineTest {
         engine.newGame();
         
         engine.applyMoves(List.of("e2e4", "e7e5"));
-        
-        String expectedFen = "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2";
+
+        // e6 is the nominal EP target, but no white pawn can capture there, so the
+        // square is not recorded (conditional EP) and FEN prints '-'.
+        String expectedFen = "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2";
         assertEquals(expectedFen, FEN.generate(engine.getBoard()));
     }
 

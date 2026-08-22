@@ -16,6 +16,9 @@ public class SEE {
         100, 320, 330, 500, 900, 20000
     };
 
+    /** Reusable swap-list buffer. Safe because the engine is single-threaded. */
+    private static final int[] gain = new int[32];
+
     /**
      * Evaluates if a capture move gains at least 'threshold' material.
      */
@@ -23,7 +26,6 @@ public class SEE {
         int from = move.from();
         int to = move.to();
         
-        int[] gain = new int[32];
         int d = 0;
         
         int victimVal = move.isEnPassant() ? PIECE_VALUES[Piece.PAWN.index()] : 

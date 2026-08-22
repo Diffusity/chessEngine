@@ -34,3 +34,7 @@ dependency-reduced-pom.xml
 
 # External lichess-bot clone (not part of this project)
 lichess-bot-repo/
+
+# Calvin reference engine (external, extracted locally)
+calvin-ref/
+*.zip

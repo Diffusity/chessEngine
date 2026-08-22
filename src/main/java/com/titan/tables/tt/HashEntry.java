@@ -9,7 +9,7 @@ public class HashEntry {
     public int score;      // search score
     public short depth;    // search depth when stored
     public byte flag;      // HashFlag ordinal
-    public byte age;       // search generation (for replacement policy)
+    public int age;        // search generation (for replacement policy)
 
     public void clear() {
         key = 0;

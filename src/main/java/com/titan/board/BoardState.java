@@ -102,14 +102,24 @@ public class BoardState {
      */
     public BoardState copy() {
         BoardState copy = new BoardState();
-        copy.castlingRights = this.castlingRights;
-        copy.enPassantSquare = this.enPassantSquare;
-        copy.halfMoveClock = this.halfMoveClock;
-        copy.capturedPiece = this.capturedPiece;
-        copy.key = this.key;
-        copy.pawnKey = this.pawnKey;
-        copy.checkers = this.checkers;
+        copyInto(copy);
         return copy;
+    }
+
+    /**
+     * Copies this state's fields into the given target object without allocating.
+     * Used by the pre-allocated undo stack in {@link Board}.
+     *
+     * @param target the state object to overwrite with this state's values
+     */
+    public void copyInto(BoardState target) {
+        target.castlingRights = this.castlingRights;
+        target.enPassantSquare = this.enPassantSquare;
+        target.halfMoveClock = this.halfMoveClock;
+        target.capturedPiece = this.capturedPiece;
+        target.key = this.key;
+        target.pawnKey = this.pawnKey;
+        target.checkers = this.checkers;
     }
 
     // ========================
