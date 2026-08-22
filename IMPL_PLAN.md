@@ -55,10 +55,16 @@ Checkpoint: ≥ 2M NPS on `bench 8`; all perft suites green.
       node entry; LMP extended to depth 6.
       Measured: startpos d10 nodes 307k→144k (−53%), time 559ms→427ms; bench8 nodes −57%;
       tactics position now finds mate-in-3 at d8 (baseline missed it). All 92 tests green.
-- [ ] Batch 2: qsearch TT probe/store + delta pruning + in-check evasion generation;
-      TT static-eval caching; staged MovePicker w/ skip-quiets; capture history;
-      1&2-ply continuation history; check-extension capping
-- [ ] Batch 3: SEE quiet/noisy pruning in main search; singular extensions; multicut
+- [x] **Batch 2 (2026-08-22)**: qsearch TT probe/store (depth-0) + delta pruning + in-check
+      evasion generation with mate detection; TT static-eval caching incl. eval-only
+      (HashFlag.NONE) entries; capture history table; 1&2-ply continuation history wired into
+      quiet ordering + bonus/malus updates; noisy-move malus tracking.
+      Tables flattened to single int[] after jagged arrays showed no indexing win.
+      Medians (5 runs): startpos d10 306→260ms & 144k→102k nodes; kiwipete d10 424→482ms
+      (cost of correct evasion handling in check-dense position); tactics now solves
+      mate-in-3. All 92 tests green. SPRT to arbitrate before tuning further.
+- [ ] Batch 3: staged MovePicker w/ skip-quiets + SEE good/bad-noisy split; SEE quiet/noisy
+      pruning in main search; razoring; singular extensions; check-extension capping
 
 ## Phase 3 — NNUE (after Phase 2 stabilizes)
 - [ ] Accumulator infra wired into make/unmake; Vector API inference kernel

@@ -22,7 +22,7 @@ class TranspositionTableTest {
         HashFlag flag = HashFlag.EXACT;
         int ply = 0;
 
-        tt.store(key, move, score, depth, flag, ply);
+        tt.store(key, move, score, depth, flag, ply, Integer.MIN_VALUE);
 
         HashEntry entry = tt.probe(key, ply);
         assertNotNull(entry);
@@ -40,7 +40,7 @@ class TranspositionTableTest {
         long key1 = 123L;
         long key2 = 456L;
 
-        tt.store(key1, 100, 10, 5, HashFlag.EXACT, 0);
+        tt.store(key1, 100, 10, 5, HashFlag.EXACT, 0, Integer.MIN_VALUE);
 
         HashEntry entry = tt.probe(key2, 0);
         assertNull(entry, "Should return null for a different key");
@@ -53,10 +53,10 @@ class TranspositionTableTest {
         long key = 123L;
 
         // Store shallow search
-        tt.store(key, 100, 10, 3, HashFlag.EXACT, 0);
+        tt.store(key, 100, 10, 3, HashFlag.EXACT, 0, Integer.MIN_VALUE);
         
         // Store deeper search with different score
-        tt.store(key, 200, 20, 5, HashFlag.EXACT, 0);
+        tt.store(key, 200, 20, 5, HashFlag.EXACT, 0, Integer.MIN_VALUE);
 
         HashEntry entry = tt.probe(key, 0);
         assertNotNull(entry);
@@ -73,13 +73,13 @@ class TranspositionTableTest {
         // but we can just use the same key, advance age, and store a shallower depth.
         long key = 123L;
 
-        tt.store(key, 100, 10, 5, HashFlag.EXACT, 0);
+        tt.store(key, 100, 10, 5, HashFlag.EXACT, 0, Integer.MIN_VALUE);
         
         // New search generation
         tt.newSearch();
         
         // Store shallower search, but it's newer, so it should replace
-        tt.store(key, 200, 20, 3, HashFlag.EXACT, 0);
+        tt.store(key, 200, 20, 3, HashFlag.EXACT, 0, Integer.MIN_VALUE);
 
         HashEntry entry = tt.probe(key, 0);
         assertNotNull(entry);
@@ -103,7 +103,7 @@ class TranspositionTableTest {
         // If we found a mate in 1 ply from here, score = MATE - 1.
         int scoreToStore = Score.mateScore(1); 
         
-        tt.store(key, 0, scoreToStore, 5, HashFlag.EXACT, currentPly);
+        tt.store(key, 0, scoreToStore, 5, HashFlag.EXACT, currentPly, Integer.MIN_VALUE);
 
         // Now probe from a different ply (e.g. ply 3)
         // If the position is reached at ply 3, the mate is still 1 ply away from that position.
@@ -139,7 +139,7 @@ class TranspositionTableTest {
         // This returns MATE - ply. So it's relative to the root.
         // OK, so score is MATE - 6 (mate at ply 6).
         scoreToStore = Score.mateScore(6);
-        tt.store(key, 0, scoreToStore, 5, HashFlag.EXACT, currentPly);
+        tt.store(key, 0, scoreToStore, 5, HashFlag.EXACT, currentPly, Integer.MIN_VALUE);
         
         entry = tt.probe(key, 3);
         retrievedScore = TranspositionTable.getScore(entry, 3);
@@ -156,7 +156,7 @@ class TranspositionTableTest {
         TranspositionTable tt = new TranspositionTable(1);
         long key = 123L;
 
-        tt.store(key, 100, 10, 5, HashFlag.EXACT, 0);
+        tt.store(key, 100, 10, 5, HashFlag.EXACT, 0, Integer.MIN_VALUE);
         assertNotNull(tt.probe(key, 0));
 
         tt.clear();

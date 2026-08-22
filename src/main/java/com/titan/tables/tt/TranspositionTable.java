@@ -87,17 +87,18 @@ public class TranspositionTable {
      * @param depth the search depth
      * @param flag the HashFlag indicating exact, lower bound or upper bound
      * @param ply the current distance from root
+     * @param staticEval the static evaluation at this node ({@code Integer.MIN_VALUE} if unknown)
      */
-    public void store(long key, int move, int score, int depth, HashFlag flag, int ply) {
+    public void store(long key, int move, int score, int depth, HashFlag flag, int ply, int staticEval) {
         HashEntry entry = table[(int) (key & mask)];
 
         // Replacement policy:
         // 1. Exact key match (we update it if depth is >= existing, or it's an EXACT score and existing is not EXACT at same depth, etc.)
         //    Actually, simple replacement if key matches and depth >= existing or different age.
         // 2. Different key (collision) -> replace if existing is older, or new is deeper.
-        
+
         boolean replace = false;
-        
+
         if (entry.key == 0 || entry.key == key) {
             replace = true;
         } else if (entry.age != currentAge) {
@@ -122,6 +123,7 @@ public class TranspositionTable {
                 entry.move = move;
             }
             entry.score = adjustedScore;
+            entry.eval = staticEval;
             entry.depth = (short) depth;
             entry.flag = (byte) flag.ordinal();
             entry.age = currentAge;

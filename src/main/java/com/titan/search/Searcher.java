@@ -5,6 +5,8 @@ import com.titan.board.Move;
 import com.titan.board.Piece;
 import com.titan.evaluation.Evaluator;
 import com.titan.movegen.MoveGenerator;
+import com.titan.tables.history.CaptureHistoryTable;
+import com.titan.tables.history.ContinuationHistoryTable;
 import com.titan.tables.history.CounterMoveTable;
 import com.titan.tables.history.HistoryTable;
 import com.titan.tables.history.KillerTable;
@@ -35,6 +37,8 @@ public class Searcher implements Search {
     private KillerTable killerTable;
     private HistoryTable historyTable;
     private CounterMoveTable counterMoveTable;
+    private CaptureHistoryTable captureHistoryTable;
+    private ContinuationHistoryTable continuationHistoryTable;
     
     // Futility margins based on depth
     private static final int[] futilityMargin = { 0, 200, 300, 500 };
@@ -57,13 +61,16 @@ public class Searcher implements Search {
         this.board = board;
         this.pvTable = new Move[MAX_DEPTH][MAX_DEPTH];
         this.pvLength = new int[MAX_DEPTH];
-        this.searchStack = new SearchStack(MAX_DEPTH + 4);
-        
+
         // 64 MB default size
         this.tt = new TranspositionTable(64);
         this.killerTable = new KillerTable(MAX_DEPTH);
         this.historyTable = new HistoryTable();
         this.counterMoveTable = new CounterMoveTable();
+        this.captureHistoryTable = new CaptureHistoryTable();
+        this.continuationHistoryTable = new ContinuationHistoryTable();
+        this.searchStack = new SearchStack(MAX_DEPTH + 4);
+        this.searchStack.continuationHistory = this.continuationHistoryTable;
     }
 
     public void setBoard(Board board) {
@@ -252,12 +259,12 @@ public class Searcher implements Search {
         }
 
         int origAlpha = alpha;
-        
+
         // Transposition Table Probe
         HashEntry ttEntry = tt.probe(board.key(), ply);
         int ttMove = 0;
-        
-        if (ttEntry != null) {
+
+        if (ttEntry != null && ttEntry.flag != HashFlag.NONE.ordinal()) {
             ttMove = ttEntry.move;
             if (ttEntry.depth >= depth && !isPVNode) {
                 int ttScore = TranspositionTable.getScore(ttEntry, ply);
@@ -268,13 +275,13 @@ public class Searcher implements Search {
                 } else if (ttEntry.flag == HashFlag.UPPER_BOUND.ordinal()) {
                     beta = Math.min(beta, ttScore);
                 }
-                
+
                 if (alpha >= beta) {
                     return ttScore;
                 }
             }
         }
-        
+
         // Internal Iterative Reductions (replaces the old IID search whose result was
         // discarded): without a TT move the node is expensive to order — just reduce.
         if (!isRoot && ttMove == 0 && (isPVNode || cutNode) && depth >= 4) {
@@ -283,7 +290,15 @@ public class Searcher implements Search {
 
         SearchStack.Entry sse = searchStack.get(ply);
 
-        int staticEval = Evaluator.evaluate(board);
+        // Static evaluation — reuse the cached value from the TT when available,
+        // otherwise evaluate and cache it (eval-only entry) for future visits.
+        int staticEval;
+        if (ttEntry != null && ttEntry.eval != Integer.MIN_VALUE) {
+            staticEval = ttEntry.eval;
+        } else {
+            staticEval = Evaluator.evaluate(board);
+            tt.store(board.key(), 0, 0, 0, HashFlag.NONE, ply, staticEval);
+        }
         sse.staticEval = staticEval;
 
         // Improving heuristic — compare static eval against our previous turn's eval,
@@ -341,12 +356,15 @@ public class Searcher implements Search {
         }
 
         int[] moveScores = new int[moves.size()];
-        MoveOrderer.scoreMoves(moves, moveScores, board, ttMove, killerTable, ply, historyTable, counterMove);
+        MoveOrderer.scoreMoves(moves, moveScores, board, ttMove, killerTable, ply,
+                historyTable, counterMove, captureHistoryTable, searchStack);
 
         int movesSearched = 0;
         Move bestMove = null;
         sse.searchedQuiets.clear();
+        sse.searchedNoisies.clear();
         List<Move> searchedQuiets = sse.searchedQuiets;
+        List<Move> searchedNoisies = sse.searchedNoisies;
 
         for (int i = 0; i < moves.size(); i++) {
             MoveOrderer.pickMove(moves, moveScores, i);
@@ -359,8 +377,10 @@ public class Searcher implements Search {
                 }
             }
 
+            Piece movedPiece = board.pieceAt(move.from());
             board.makeMove(move);
-            searchStack.get(ply).currentMove = move;
+            sse.currentMove = move;
+            sse.movedPiece = movedPiece;
 
             boolean givesCheck = MoveGenerator.isInCheck(board, board.isWhiteToMove());
 
@@ -411,6 +431,8 @@ public class Searcher implements Search {
 
             if (move.isQuiet()) {
                 searchedQuiets.add(move);
+            } else {
+                searchedNoisies.add(move);
             }
             movesSearched++;
 
@@ -422,10 +444,33 @@ public class Searcher implements Search {
                         killerTable.add(move.encoded(), ply);
                         historyTable.addBonus(board.isWhiteToMove(), move.from(), move.to(), depth);
 
+                        // Continuation history bonus for the 1-ply and 2-ply predecessors
+                        for (int k = 1; k <= 2; k++) {
+                            if (ply - k < 0) break;
+                            SearchStack.Entry prev = searchStack.get(ply - k);
+                            continuationHistoryTable.addBonus(board.isWhiteToMove(),
+                                    prev.currentMove, prev.movedPiece, move, movedPiece, depth);
+                        }
+
                         // Malus only for quiet moves that were ACTUALLY searched
                         for (Move prevQuiet : searchedQuiets) {
-                            if (prevQuiet != move) {
-                                historyTable.addMalus(board.isWhiteToMove(), prevQuiet.from(), prevQuiet.to(), depth);
+                            if (prevQuiet == move) continue;
+                            historyTable.addMalus(board.isWhiteToMove(), prevQuiet.from(), prevQuiet.to(), depth);
+                            Piece qm = board.pieceAt(prevQuiet.from());
+                            for (int k = 1; k <= 2; k++) {
+                                if (ply - k < 0) break;
+                                SearchStack.Entry prev = searchStack.get(ply - k);
+                                continuationHistoryTable.addMalus(board.isWhiteToMove(),
+                                        prev.currentMove, prev.movedPiece, prevQuiet, qm, depth);
+                            }
+                        }
+
+                        // Malus for noisy moves that were searched but did not cut off
+                        for (Move prevNoisy : searchedNoisies) {
+                            Piece victimN = prevNoisy.isEnPassant() ? Piece.PAWN : board.pieceAt(prevNoisy.to());
+                            Piece moverN = board.pieceAt(prevNoisy.from());
+                            if (victimN != null && moverN != null) {
+                                captureHistoryTable.addMalus(moverN, prevNoisy.to(), victimN, depth);
                             }
                         }
 
@@ -439,10 +484,15 @@ public class Searcher implements Search {
                                 }
                             }
                         }
+                    } else {
+                        // Capture-history bonus for the winning noisy move,
+                        // malus for the noisy moves that were tried and failed.
+                        Piece victim = move.isEnPassant() ? Piece.PAWN : board.pieceAt(move.to());
+                        captureHistoryTable.addBonus(movedPiece, move.to(), victim, depth);
                     }
 
                     HashFlag flag = HashFlag.LOWER_BOUND;
-                    tt.store(board.key(), move.encoded(), beta, depth, flag, ply);
+                    tt.store(board.key(), move.encoded(), beta, depth, flag, ply, staticEval);
 
                     return beta;
                 }
@@ -457,7 +507,7 @@ public class Searcher implements Search {
         }
         
         int moveEncoded = bestMove != null ? bestMove.encoded() : 0;
-        tt.store(board.key(), moveEncoded, alpha, depth, flag, ply);
+        tt.store(board.key(), moveEncoded, alpha, depth, flag, ply, staticEval);
 
         return alpha;
     }
@@ -479,43 +529,103 @@ public class Searcher implements Search {
             return Score.DRAW;
         }
 
-        int standPat = Evaluator.evaluate(board);
-        if (standPat >= beta) {
-            return beta;
-        }
-        if (standPat > alpha) {
-            alpha = standPat;
-        }
+        boolean inCheck = MoveGenerator.isInCheck(board, board.isWhiteToMove());
 
-        List<Move> captures = MoveGenerator.generateCaptures(board);
-        
-        int[] moveScores = new int[captures.size()];
-        MoveOrderer.scoreMoves(captures, moveScores, board, 0, null, ply, null, 0);
+        // Transposition table probe (depth-0 entries). Eval-only entries are valid here.
+        long key = board.key();
+        HashEntry ttEntry = tt.probe(key, ply);
+        boolean ttUsable = ttEntry != null && ttEntry.flag != HashFlag.NONE.ordinal();
 
-        for (int i = 0; i < captures.size(); i++) {
-            MoveOrderer.pickMove(captures, moveScores, i);
-            Move move = captures.get(i);
-            
-            // Quiescence SEE pruning (don't search losing captures)
-            if (!SEE.see(board, move, 0)) {
-                continue;
+        int staticEval = Integer.MIN_VALUE;
+
+        if (!inCheck) {
+            if (ttEntry != null && ttEntry.eval != Integer.MIN_VALUE) {
+                staticEval = ttEntry.eval;
+            } else {
+                staticEval = Evaluator.evaluate(board);
+                tt.store(key, 0, 0, 0, HashFlag.NONE, ply, staticEval);
             }
-            
+
+            // Cached-score cutoffs
+            if (ttUsable) {
+                int ttScore = TranspositionTable.getScore(ttEntry, ply);
+                boolean withinBounds = ttEntry.flag == HashFlag.EXACT.ordinal()
+                        || (ttEntry.flag == HashFlag.LOWER_BOUND.ordinal() && ttScore >= beta)
+                        || (ttEntry.flag == HashFlag.UPPER_BOUND.ordinal() && ttScore <= alpha);
+                if (withinBounds) return ttScore;
+            }
+
+            // Stand pat — captures-only mode.
+            if (staticEval >= beta) {
+                return staticEval;
+            }
+            if (staticEval > alpha) {
+                alpha = staticEval;
+            }
+        }
+
+        List<Move> moves = inCheck
+                ? MoveGenerator.generateLegalMoves(board)   // full evasions: mates are found here
+                : MoveGenerator.generateCaptures(board);
+
+        if (inCheck && moves.isEmpty()) {
+            return -Score.mateScore(ply); // checkmated in the quiescence tail
+        }
+
+        int[] moveScores = new int[moves.size()];
+        MoveOrderer.scoreMoves(moves, moveScores, board, 0, null, ply, null, 0, null, null);
+
+        int bestScore = inCheck ? -Score.INFINITY : staticEval;
+        Move bestMove = null;
+        int flag = HashFlag.UPPER_BOUND.ordinal();
+
+        for (int i = 0; i < moves.size(); i++) {
+            MoveOrderer.pickMove(moves, moveScores, i);
+            Move move = moves.get(i);
+
+            if (!inCheck) {
+                // Delta pruning: even winning the victim cannot raise alpha.
+                if (!move.isPromotion()) {
+                    Piece victim = move.isEnPassant() ? Piece.PAWN : board.pieceAt(move.to());
+                    int victimValue = victim != null ? victim.value() : 0;
+                    if (staticEval + victimValue + 200 <= alpha) {
+                        continue;
+                    }
+                }
+
+                // Quiescence SEE pruning (don't search losing captures)
+                if (!SEE.see(board, move, 0)) {
+                    continue;
+                }
+            }
+
             board.makeMove(move);
             int score = -quiescence(-beta, -alpha, ply + 1);
             board.unmakeMove();
 
             if (stopped) return 0;
 
+            if (score > bestScore) {
+                bestScore = score;
+                bestMove = move;
+            }
+
             if (score > alpha) {
-                if (score >= beta) {
-                    return beta;
-                }
+                flag = HashFlag.EXACT.ordinal();
                 alpha = score;
+                if (score >= beta) {
+                    flag = HashFlag.LOWER_BOUND.ordinal();
+                    break;
+                }
             }
         }
 
-        return alpha;
+        if (!stopped) {
+            tt.store(key, bestMove != null ? bestMove.encoded() : 0,
+                    bestScore, 0, HashFlag.values()[flag], ply, staticEval);
+        }
+
+        return bestScore;
     }
 
     private boolean isDraw() {

@@ -3,9 +3,9 @@ package com.titan.search;
 import com.titan.board.Board;
 import com.titan.board.Move;
 import com.titan.board.Piece;
+import com.titan.tables.history.CaptureHistoryTable;
 import com.titan.tables.history.HistoryTable;
 import com.titan.tables.history.KillerTable;
-
 import java.util.List;
 
 /**
@@ -29,21 +29,29 @@ public class MoveOrderer {
             List<Move> moves, int[] scores, Board board,
             int ttMove,
             KillerTable killers, int ply,
-            HistoryTable history, int counterMove) {
-        
+            HistoryTable history, int counterMove,
+            CaptureHistoryTable captureHistory,
+            SearchStack ss) {
+
         boolean white = board.isWhiteToMove();
 
         for (int i = 0; i < moves.size(); i++) {
             Move move = moves.get(i);
             int encoded = move.encoded();
-            
+
             if (encoded == ttMove) {
                 scores[i] = TT_MOVE_SCORE;
             } else if (move.isCapture()) {
+                Piece victim = move.isEnPassant() ? Piece.PAWN : board.pieceAt(move.to());
+                Piece attacker = board.pieceAt(move.from());
+                int base = mvvLva(board, move);
+                if (captureHistory != null && victim != null && attacker != null) {
+                    base += captureHistory.get(attacker, move.to(), victim) / 4;
+                }
                 if (SEE.see(board, move, 0)) {
-                    scores[i] = WINNING_CAPTURE + mvvLva(board, move);
+                    scores[i] = WINNING_CAPTURE + base;
                 } else {
-                    scores[i] = LOSING_CAPTURE + mvvLva(board, move);
+                    scores[i] = LOSING_CAPTURE + base;
                 }
             } else if (move.isPromotion() && move.promoPiece() == Piece.QUEEN) {
                 scores[i] = QUEEN_PROMO;
@@ -54,11 +62,23 @@ public class MoveOrderer {
             } else if (encoded == counterMove) {
                 scores[i] = COUNTER_MOVE_SCORE;
             } else {
+                int score = 0;
                 if (history != null) {
-                    scores[i] = history.getScore(white, move.from(), move.to());
-                } else {
-                    scores[i] = 0;
+                    score = history.getScore(white, move.from(), move.to());
                 }
+                if (ss != null) {
+                    // Continuation history from the previous one and two plies
+                    Piece mover = board.pieceAt(move.from());
+                    for (int k = 1; k <= 2; k++) {
+                        if (ply - k < 0) break;
+                        SearchStack.Entry prev = ss.get(ply - k);
+                        if (prev.currentMove != null && prev.movedPiece != null) {
+                            score += ss.continuationHistory.get(
+                                    white, prev.currentMove, prev.movedPiece, move, mover);
+                        }
+                    }
+                }
+                scores[i] = score;
             }
         }
     }
