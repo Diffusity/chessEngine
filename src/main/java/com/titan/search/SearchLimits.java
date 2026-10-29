@@ -1,108 +1,79 @@
 package com.titan.search;
 
-/**
- * Encapsulates search constraints from UCI `go` command and computes time allocation.
- */
+import java.util.function.LongSupplier;
+
+/** Search constraints, using a monotonic clock and millisecond UCI budgets. */
 public class SearchLimits {
-    // UCI fields — set from "go" command
-    public long wtime, btime;          // remaining time in ms
-    public long winc, binc;            // increment per move in ms
-    public int movestogo;              // moves until next time control (0 = sudden death)
-    public int depth;                  // max depth (0 = unlimited)
-    public long nodes;                 // max nodes (0 = unlimited)
-    public long movetime;              // exact time per move in ms (0 = unused)
-    public boolean infinite;           // infinite search (until "stop")
+    // Negative means absent; an explicit zero clock is an exhausted budget.
+    public long wtime = -1, btime = -1;
+    public long winc, binc;
+    public int movestogo;
+    public int depth;
+    public long nodes;
+    public long movetime = -1;
+    public boolean infinite;
+    public long softLimit, hardLimit, startTime;
 
-    // Computed limits
-    public long softLimit;             // target time (try to finish within this)
-    public long hardLimit;             // absolute max time (must stop here)
-    public long startTime;             // nanoTime when search started
+    // Small local cancellation reserve; the bridge owns its network reserve.
+    private static final long SAFETY_RESERVE_MS = 10;
+    private final LongSupplier nanoClock;
+    private boolean timed;
 
-    /**
-     * Factory for analysis mode (infinite).
-     */
+    public SearchLimits() { this(System::nanoTime); }
+    SearchLimits(LongSupplier nanoClock) { this.nanoClock = nanoClock; }
+
     public static SearchLimits infinite() {
         SearchLimits limits = new SearchLimits();
         limits.infinite = true;
         return limits;
     }
 
-    /**
-     * Factory for fixed-depth search.
-     */
     public static SearchLimits fixedDepth(int depth) {
         SearchLimits limits = new SearchLimits();
         limits.depth = depth;
         return limits;
     }
 
-    /**
-     * Factory for move time limit.
-     */
     public static SearchLimits moveTime(long timeMs) {
         SearchLimits limits = new SearchLimits();
-        limits.movetime = timeMs;
+        limits.movetime = Math.max(0, timeMs);
         return limits;
     }
 
-    /**
-     * Computes the soft/hard limits from UCI fields based on side to move.
-     */
     public void init(boolean whiteToMove) {
-        startTime = System.nanoTime();
-
-        if (infinite) {
-            softLimit = Long.MAX_VALUE;
-            hardLimit = Long.MAX_VALUE;
-            return;
-        }
-
-        if (movetime > 0) {
-            softLimit = movetime;
-            hardLimit = movetime;
-            return;
-        }
-
+        startTime = nanoClock.getAsLong();
         long remaining = whiteToMove ? wtime : btime;
-        long increment = whiteToMove ? winc : binc;
-
-        if (remaining == 0 && increment == 0 && depth == 0 && nodes == 0) {
-             // no limits specified, act like infinite
-             softLimit = Long.MAX_VALUE;
-             hardLimit = Long.MAX_VALUE;
-             return;
+        long increment = Math.max(0, whiteToMove ? winc : binc);
+        timed = !infinite && (remaining >= 0 || movetime >= 0);
+        if (!timed) {
+            softLimit = hardLimit = Long.MAX_VALUE;
+            return;
         }
 
-        int movesLeft = movestogo > 0 ? movestogo : 30;
-        
-        softLimit = remaining / movesLeft + (increment * 3 / 4);
-        hardLimit = Math.min(remaining / 4, softLimit * 3);
-
-        // Ensure reasonable minimums if time is very low
-        if (softLimit < 10) softLimit = 10;
-        if (hardLimit < 10) hardLimit = 10;
-    }
-
-    /**
-     * Check if hard limit exceeded.
-     */
-    public boolean isTimeUp() {
-        if (infinite || (depth > 0 && movetime == 0 && wtime == 0 && btime == 0)) {
-            return false;
+        long usable = remaining >= 0 ? Math.max(0, remaining - SAFETY_RESERVE_MS) : Long.MAX_VALUE;
+        if (movetime >= 0) {
+            softLimit = hardLimit = Math.min(movetime, usable);
+            return;
         }
-        long elapsed = (System.nanoTime() - startTime) / 1_000_000;
-        return elapsed >= hardLimit;
+
+        int movesLeft = movestogo > 0 ? movestogo : 40;
+        // 60% of increment influences the target, but never expands spendable time.
+        long incrementShare = increment / 5 * 3 + increment % 5 * 3 / 5;
+        long base = usable / movesLeft;
+        long target = base > Long.MAX_VALUE - incrementShare ? Long.MAX_VALUE : base + incrementShare;
+        softLimit = Math.min(target, usable);
+        long extended = softLimit > Long.MAX_VALUE / 2 ? Long.MAX_VALUE : softLimit * 2;
+        hardLimit = Math.min(usable / 5, extended);
+        softLimit = Math.min(softLimit, hardLimit);
     }
 
-    /**
-     * Check if there is enough time for another iteration.
-     */
+    public long elapsedMillis() {
+        return Math.max(0, (nanoClock.getAsLong() - startTime) / 1_000_000);
+    }
+
+    public boolean isTimeUp() { return timed && elapsedMillis() >= hardLimit; }
+
     public boolean shouldDeepen() {
-        if (infinite || (depth > 0 && movetime == 0 && wtime == 0 && btime == 0)) {
-            return true;
-        }
-        long elapsed = (System.nanoTime() - startTime) / 1_000_000;
-        // Only start next depth if we've used less than half of our soft limit
-        return elapsed < (softLimit / 2);
+        return !timed || elapsedMillis() < softLimit / 2;
     }
 }

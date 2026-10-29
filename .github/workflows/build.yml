@@ -25,3 +25,6 @@ jobs:
 
     - name: Run Perft Benchmark
       run: java -jar target/titan-chess-engine-1.0.0-SNAPSHOT.jar bench 5
+
+    - name: Check UCI search lifecycle and exhausted clocks
+      run: python3 testing/check_uci_reliability.py --jar target/titan-chess-engine-1.0.0-SNAPSHOT.jar --output target/uci-reliability.json

@@ -8,6 +8,7 @@ import com.titan.search.Searcher;
 import com.titan.utils.FEN;
 
 import java.util.List;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * Central coordinator that owns the Board and Searcher.
@@ -19,8 +20,14 @@ public class Engine {
     private final Searcher searcher;
     private Thread searchThread;
     private final EngineConfig config;
+    private final ThreadFactory threadFactory;
 
     public Engine() {
+        this(Thread::new);
+    }
+
+    Engine(ThreadFactory threadFactory) {
+        this.threadFactory = threadFactory;
         this.board = new Board();
         this.searcher = new Searcher(this.board);
         this.config = new EngineConfig();
@@ -30,7 +37,7 @@ public class Engine {
     /**
      * Resets the engine to a new game state.
      */
-    public void newGame() {
+    public synchronized void newGame() {
         setPosition(FEN.STARTING_FEN);
         searcher.getTranspositionTable().clear();
     }
@@ -38,9 +45,10 @@ public class Engine {
     /**
      * Sets the board position from a FEN string.
      */
-    public void setPosition(String fen) {
+    public synchronized void setPosition(String fen) {
+        stopSearch();
         Board newBoard = FEN.parse(fen);
-        // Copy the state into our existing board instance so Searcher doesn't lose the reference
+        // The old worker has stopped; both owners can now use the new board.
         this.board = newBoard;
         this.searcher.setBoard(this.board);
     }
@@ -49,7 +57,8 @@ public class Engine {
      * Applies a list of UCI moves (e.g., "e2e4") to the current position.
      * Generates legal moves and matches by string to ensure flags are correct.
      */
-    public void applyMoves(List<String> uciMoves) {
+    public synchronized void applyMoves(List<String> uciMoves) {
+        stopSearch();
         for (String uci : uciMoves) {
             Move legalMove = findLegalMove(board, uci);
             if (legalMove != null) {
@@ -73,17 +82,11 @@ public class Engine {
     /**
      * Starts the search on a separate thread.
      */
-    public void startSearch(SearchLimits limits) {
+    public synchronized void startSearch(SearchLimits limits) {
         stopSearch(); // Ensure previous search is stopped
 
-        searchThread = new Thread(() -> {
+        searchThread = threadFactory.newThread(() -> {
             try {
-                // The searcher will handle printing "info" and eventually returning the result.
-                // It will NOT print "bestmove" directly according to the Search API,
-                // so we will need to print it here or in the UCI handler.
-                // Wait, Searcher returns SearchResult. The caller of startSearch can't get it directly
-                // because it's a separate thread. We should print "bestmove" when search finishes.
-                
                 var result = searcher.search(board, limits);
                 if (result != null && result.bestMove() != null) {
                     System.out.println("bestmove " + result.bestMove().toUCI());
@@ -102,13 +105,18 @@ public class Engine {
     /**
      * Signals the search to stop and waits for it to finish.
      */
-    public void stopSearch() {
+    public synchronized void stopSearch() {
         if (searchThread != null && searchThread.isAlive()) {
             searcher.stop();
+            searchThread.interrupt();
             try {
-                searchThread.join(2000); // Wait max 2 seconds
+                searchThread.join(2000);
+                if (searchThread.isAlive()) {
+                    throw new IllegalStateException("Search did not stop; shared state was not changed");
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                throw new IllegalStateException("Interrupted while waiting for search to stop", e);
             }
         }
     }
@@ -116,14 +124,15 @@ public class Engine {
     /**
      * Resizes the transposition table.
      */
-    public void setHashSize(int sizeMB) {
+    public synchronized void setHashSize(int sizeMB) {
+        stopSearch();
         searcher.getTranspositionTable().resize(sizeMB);
     }
     
     /**
      * Sets an engine option.
      */
-    public void setOption(String name, String value) {
+    public synchronized void setOption(String name, String value) {
         config.setOption(name, value);
         if (name.equalsIgnoreCase("hash")) {
             setHashSize(config.getHashSizeMB());
