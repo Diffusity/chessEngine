@@ -410,8 +410,11 @@ public class Searcher implements Search {
         }
 
         boolean inCheck = MoveGenerator.isInCheck(board, board.isWhiteToMove());
-        List<Move> captures = MoveGenerator.generateLegalMoves(board);
-        if (captures.isEmpty()) {
+        List<Move> captures = inCheck ? MoveGenerator.generateLegalMoves(board)
+                                    : MoveGenerator.generateTacticalMoves(board);
+        // A quiet legal move distinguishes a quiet position from stalemate.
+        // In check, all evasions were generated, so an empty list means mate.
+        if (captures.isEmpty() && (inCheck || !MoveGenerator.hasLegalMove(board))) {
             return inCheck ? -Score.mateScore(ply) : Score.DRAW;
         }
 
@@ -419,7 +422,6 @@ public class Searcher implements Search {
             int standPat = Evaluator.evaluate(board);
             if (standPat >= beta) return beta;
             alpha = Math.max(alpha, standPat);
-            captures.removeIf(move -> !move.isCapture() && !move.isPromotion());
         }
 
         int[] moveScores = new int[captures.size()];

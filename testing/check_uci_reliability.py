@@ -12,11 +12,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--jar", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--java", default="java")
     args = parser.parse_args()
     if args.output.exists():
         parser.error("Choose a new output filename")
     results = []
-    engine = Engine("java", args.jar.resolve(strict=True))
+    engine = Engine(args.java, args.jar.resolve(strict=True))
     try:
         engine.send("uci")
         engine.until("uciok", 10)

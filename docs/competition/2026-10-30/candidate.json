@@ -1,0 +1,7 @@
+{
+  "jar": "artifacts\\2026-10-30\\tactical-candidate\\titan-tactical.jar",
+  "sha256": "916ab374a2548cf6d93bdebc21798947f44a8d319184c86da0aa58efde040a09",
+  "java": "25.0.1",
+  "java_tests_passed": 128,
+  "uci_process_checks_passed": 25
+}
