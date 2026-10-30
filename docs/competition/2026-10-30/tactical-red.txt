@@ -1,27 +1,27 @@
 [INFO] Scanning for projects...
-[INFO] 
+[INFO]
 [INFO] --------------------< com.titan:titan-chess-engine >--------------------
 [INFO] Building Titan Chess Engine 1.0.0-SNAPSHOT
 [INFO]   from pom.xml
 [INFO] --------------------------------[ jar ]---------------------------------
-[INFO] 
+[INFO]
 [INFO] --- resources:3.3.1:resources (default-resources) @ titan-chess-engine ---
 [INFO] skip non existing resourceDirectory D:\chessEngine\src\main\resources
-[INFO] 
+[INFO]
 [INFO] --- compiler:3.11.0:compile (default-compile) @ titan-chess-engine ---
 [INFO] Changes detected - recompiling the module! :source
 [INFO] Compiling 38 source files with javac [debug release 17] to target\classes
-[INFO] 
+[INFO]
 [INFO] --- resources:3.3.1:testResources (default-testResources) @ titan-chess-engine ---
 [INFO] Copying 1 resource from src\test\resources to target\test-classes
-[INFO] 
+[INFO]
 [INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ titan-chess-engine ---
 [INFO] Changes detected - recompiling the module! :dependency
 [INFO] Compiling 16 source files with javac [debug release 17] to target\test-classes
-[INFO] 
+[INFO]
 [INFO] --- surefire:3.2.5:test (default-test) @ titan-chess-engine ---
 [INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
-[INFO] 
+[INFO]
 [INFO] -------------------------------------------------------
 [INFO]  T E S T S
 [INFO] -------------------------------------------------------
@@ -52,15 +52,15 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <20>
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
 
-[INFO] 
+[INFO]
 [INFO] Results:
-[INFO] 
-[ERROR] Failures: 
+[INFO]
+[ERROR] Failures:
 [ERROR]   TacticalMoveGeneratorTest.existenceProbeStopsAfterFirstLegalMoveAndRestoresBoard:73 expected: <1> but was: <20>
 [ERROR]   TacticalMoveGeneratorTest.tacticalGenerationDoesNotValidateQuietMoves:65 No tactical moves means no make/unmake legality work ==> expected: <0> but was: <20>
-[INFO] 
+[INFO]
 [ERROR] Tests run: 4, Failures: 2, Errors: 0, Skipped: 0
-[INFO] 
+[INFO]
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD FAILURE
 [INFO] ------------------------------------------------------------------------
@@ -68,13 +68,13 @@ org.opentest4j.AssertionFailedError: expected: <1> but was: <20>
 [INFO] Finished at: 2026-10-30T10:42:56+05:30
 [INFO] ------------------------------------------------------------------------
 [ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project titan-chess-engine: There are test failures.
-[ERROR] 
+[ERROR]
 [ERROR] Please refer to D:\chessEngine\target\surefire-reports for the individual test results.
 [ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
 [ERROR] -> [Help 1]
-[ERROR] 
+[ERROR]
 [ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
 [ERROR] Re-run Maven using the -X switch to enable full debug logging.
-[ERROR] 
+[ERROR]
 [ERROR] For more information about the errors and possible solutions, please read the following articles:
 [ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
