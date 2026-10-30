@@ -1,5 +1,50 @@
 # Guarded validation and loss review
 
+## Completion update — 31 October 2026
+
+All 28 guarded games finished with normal terminations. Independent python-chess
+replay found no illegal recorded move. AC remained connected in every sample;
+the largest wall-clock sample gap was 1.022 seconds. The direct match's ten
+distinct opening positions and swapped colours within each pair were verified.
+
+Results are wins / draws / losses for the first-named build:
+
+| Comparison | Replacement batch | Combined valid 20-game set or direct result |
+| --- | --- | --- |
+| Reliability vs original | 0 / 1 / 1 | 1 / 10 / 9 |
+| Frozen tactical vs reliability | 2 / 4 / 0 | 4 / 13 / 3 |
+| Corrected terminal candidate vs original | Not applicable | 4 / 7 / 9 |
+
+Combined sets remove entire affected pairs before inserting the new games;
+original records are preserved. Replacement games are fresh experiments with
+the same frozen binaries/control, not deterministic replays of prior process
+history. The first two sets reuse standard startpos. The direct set uses the ten
+local test openings, so cross-match score comparisons are not a controlled Elo
+measurement. All samples are small.
+
+The corrected candidate lost the direct match, scoring 7.5/20 (37.5%). Its lowest
+recorded clock was 59.781 seconds. The safeguards worked in this run, but neither
+the correctness fixes nor measured throughput improvement establishes stronger
+play. Do not merge or choose this build based on speed alone, and do not revert
+known correctness fixes solely on this small result.
+
+Next engineering priority: isolate the source of the performance regression with
+bounded, deeper analysis of the direct-match losses and one-change-at-a-time
+comparisons of time allocation/search behaviour. Preserve all regression tests.
+Avoid introducing additional evaluation or pruning changes before identifying a
+specific mechanism. Match scores alone do not identify the defective component.
+
+After completion, dumbEngine had no active game. SuperChessBot1900 was still not
+reported online by the status API, so no challenges or bridge process were
+started. Both authorised live rehearsals remain pending opponent availability.
+No Gmail sending tool is available; the organiser draft is still unsent. These
+external prerequisites remain open. The completed monitoring automation is being
+removed rather than polling indefinitely for access or opponent availability.
+
+Detailed verification: `guarded-final-results.json`. Earlier sections below
+record the preparation and launch state; this completion update supersedes their
+pending-match status. PR #1 remains unmerged.
+
 ## Completed engineering work
 
 Windows Kernel-Power events now provide evidence of Modern Standby and sleep
