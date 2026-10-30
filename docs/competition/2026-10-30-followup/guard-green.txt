@@ -1,0 +1,15 @@
+test_full_games_and_swapped_colours (test_match_configuration.MatchConfigurationTest.test_full_games_and_swapped_colours) ... ok
+test_local_opening_positions_keep_colour_pairs (test_match_configuration.MatchConfigurationTest.test_local_opening_positions_keep_colour_pairs) ... ok
+test_missing_opponent_or_wrong_control_is_rejected (test_match_configuration.MatchConfigurationTest.test_missing_opponent_or_wrong_control_is_rejected) ... ok
+test_rehearsal_is_casual_exact_control_and_allowlisted (test_match_configuration.MatchConfigurationTest.test_rehearsal_is_casual_exact_control_and_allowlisted) ... ok
+test_resume_keeps_saved_results_and_logs (test_match_configuration.MatchConfigurationTest.test_resume_keeps_saved_results_and_logs) ... ok
+test_healthy_tick (test_match_guard.MatchGuardTest.test_healthy_tick) ... ok
+test_refuses_to_start_on_battery (test_match_guard.MatchGuardTest.test_refuses_to_start_on_battery) ... ok
+test_releases_temporary_request_after_failure (test_match_guard.MatchGuardTest.test_releases_temporary_request_after_failure) ... ok
+test_suspension_or_scheduler_gap_invalidates_run (test_match_guard.MatchGuardTest.test_suspension_or_scheduler_gap_invalidates_run) ... ok
+test_unplug_invalidates_run (test_match_guard.MatchGuardTest.test_unplug_invalidates_run) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.002s
+
+OK

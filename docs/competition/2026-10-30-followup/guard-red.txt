@@ -1,0 +1,54 @@
+test_healthy_tick (test_match_guard.MatchGuardTest.test_healthy_tick) ... ok
+test_refuses_to_start_on_battery (test_match_guard.MatchGuardTest.test_refuses_to_start_on_battery) ... ok
+test_releases_temporary_request_after_failure (test_match_guard.MatchGuardTest.test_releases_temporary_request_after_failure) ... ok
+test_suspension_or_scheduler_gap_invalidates_run (test_match_guard.MatchGuardTest.test_suspension_or_scheduler_gap_invalidates_run) ...
+  test_suspension_or_scheduler_gap_invalidates_run (test_match_guard.MatchGuardTest.test_suspension_or_scheduler_gap_invalidates_run) (wall=160, mono=70) ... FAIL
+  test_suspension_or_scheduler_gap_invalidates_run (test_match_guard.MatchGuardTest.test_suspension_or_scheduler_gap_invalidates_run) (wall=160, mono=11) ... FAIL
+  test_suspension_or_scheduler_gap_invalidates_run (test_match_guard.MatchGuardTest.test_suspension_or_scheduler_gap_invalidates_run) (wall=101, mono=70) ... FAIL
+  test_suspension_or_scheduler_gap_invalidates_run (test_match_guard.MatchGuardTest.test_suspension_or_scheduler_gap_invalidates_run) (wall=99, mono=11) ... FAIL
+test_unplug_invalidates_run (test_match_guard.MatchGuardTest.test_unplug_invalidates_run) ... FAIL
+
+======================================================================
+FAIL: test_suspension_or_scheduler_gap_invalidates_run (test_match_guard.MatchGuardTest.test_suspension_or_scheduler_gap_invalidates_run) (wall=160, mono=70)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\chessEngine\testing\test_match_guard.py", line 12, in test_suspension_or_scheduler_gap_invalidates_run
+    with self.subTest(wall=wall, mono=mono), self.assertRaises(RuntimeError):
+AssertionError: RuntimeError not raised
+
+======================================================================
+FAIL: test_suspension_or_scheduler_gap_invalidates_run (test_match_guard.MatchGuardTest.test_suspension_or_scheduler_gap_invalidates_run) (wall=160, mono=11)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\chessEngine\testing\test_match_guard.py", line 12, in test_suspension_or_scheduler_gap_invalidates_run
+    with self.subTest(wall=wall, mono=mono), self.assertRaises(RuntimeError):
+AssertionError: RuntimeError not raised
+
+======================================================================
+FAIL: test_suspension_or_scheduler_gap_invalidates_run (test_match_guard.MatchGuardTest.test_suspension_or_scheduler_gap_invalidates_run) (wall=101, mono=70)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\chessEngine\testing\test_match_guard.py", line 12, in test_suspension_or_scheduler_gap_invalidates_run
+    with self.subTest(wall=wall, mono=mono), self.assertRaises(RuntimeError):
+AssertionError: RuntimeError not raised
+
+======================================================================
+FAIL: test_suspension_or_scheduler_gap_invalidates_run (test_match_guard.MatchGuardTest.test_suspension_or_scheduler_gap_invalidates_run) (wall=99, mono=11)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\chessEngine\testing\test_match_guard.py", line 12, in test_suspension_or_scheduler_gap_invalidates_run
+    with self.subTest(wall=wall, mono=mono), self.assertRaises(RuntimeError):
+AssertionError: RuntimeError not raised
+
+======================================================================
+FAIL: test_unplug_invalidates_run (test_match_guard.MatchGuardTest.test_unplug_invalidates_run)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\chessEngine\testing\test_match_guard.py", line 16, in test_unplug_invalidates_run
+    with self.assertRaises(RuntimeError):
+AssertionError: RuntimeError not raised
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.006s
+
+FAILED (failures=5)

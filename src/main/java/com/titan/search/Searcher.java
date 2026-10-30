@@ -175,7 +175,7 @@ public class Searcher implements Search {
         boolean isPVNode = (beta - alpha > 1);
 
         if (ply > 0 && isDraw()) {
-            return Score.DRAW;
+            return drawOrCheckmateScore(ply);
         }
 
         boolean inCheck = MoveGenerator.isInCheck(board, board.isWhiteToMove());
@@ -406,7 +406,7 @@ public class Searcher implements Search {
         }
 
         if (isDraw()) {
-            return Score.DRAW;
+            return drawOrCheckmateScore(ply);
         }
 
         boolean inCheck = MoveGenerator.isInCheck(board, board.isWhiteToMove());
@@ -465,6 +465,15 @@ public class Searcher implements Search {
 
     private boolean isDraw() {
         return board.isRepetition() || board.isFiftyMoveRule() || board.isInsufficientMaterial();
+    }
+
+    private int drawOrCheckmateScore(int ply) {
+        // A mating move ends the game before a fifty-move draw can be claimed.
+        // Probe legality only on this uncommon draw path, not at every node.
+        if (MoveGenerator.isInCheck(board, board.isWhiteToMove()) && !MoveGenerator.hasLegalMove(board)) {
+            return -Score.mateScore(ply);
+        }
+        return Score.DRAW;
     }
 
     private void updatePV(int ply, Move move) {

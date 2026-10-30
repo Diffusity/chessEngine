@@ -5,6 +5,13 @@ from continue_validation import resume_command
 
 
 class MatchConfigurationTest(unittest.TestCase):
+    def test_local_opening_positions_keep_colour_pairs(self):
+        cmd = command('fastchess.exe', 'java.exe', 10, 'positions.epd')
+        self.assertIn('file=positions.epd', cmd)
+        self.assertIn('format=epd', cmd)
+        self.assertIn('order=sequential', cmd)
+        self.assertEqual(cmd[cmd.index('-games')+1], '2')
+
     def test_resume_keeps_saved_results_and_logs(self):
         cmd = resume_command("fastchess.exe")
         self.assertIn("stats=true", cmd)

@@ -31,6 +31,21 @@ class QuiescenceTest {
         assertEquals(-Score.mateScore(1), evaluate(FEN.parse("7k/6Q1/5K2/8/8/8/8/8 b - - 0 1")));
     }
 
+    @Test void checkmateTakesPrecedenceOverFiftyMoveDrawAtHorizon() throws Exception {
+        assertEquals(-Score.mateScore(1), evaluate(FEN.parse("7k/6Q1/5K2/8/8/8/8/8 b - - 100 1")));
+    }
+
+    @Test void quietMateOnHundredthHalfmoveIsFoundBySearch() {
+        Board board = FEN.parse("7k/8/5KQ1/8/8/8/8/8 w - - 99 1");
+        SearchLimits limits = SearchLimits.fixedDepth(2);
+        limits.init(true);
+        SearchResult result = new Searcher(board).search(board, limits);
+        assertTrue(Score.isMateScore(result.score()), "A quiet mating move ends the game before a draw claim");
+        board.makeMove(result.bestMove());
+        assertTrue(MoveGenerator.isInCheck(board, false));
+        assertTrue(MoveGenerator.generateLegalMoves(board).isEmpty());
+    }
+
     @Test void stalemateAtQuiescenceNodeIsDraw() throws Exception {
         assertEquals(Score.DRAW, evaluate(FEN.parse("7k/5Q2/5K2/8/8/8/8/8 b - - 0 1")));
     }

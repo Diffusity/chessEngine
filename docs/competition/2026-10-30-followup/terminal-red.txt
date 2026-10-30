@@ -1,0 +1,81 @@
+[INFO] Scanning for projects...
+[INFO]
+[INFO] --------------------< com.titan:titan-chess-engine >--------------------
+[INFO] Building Titan Chess Engine 1.0.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- resources:3.3.1:resources (default-resources) @ titan-chess-engine ---
+[INFO] skip non existing resourceDirectory D:\chessEngine\src\main\resources
+[INFO]
+[INFO] --- compiler:3.11.0:compile (default-compile) @ titan-chess-engine ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ titan-chess-engine ---
+[INFO] Copying 1 resource from src\test\resources to target\test-classes
+[INFO]
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ titan-chess-engine ---
+[INFO] Changes detected - recompiling the module! :source
+[INFO] Compiling 16 source files with javac [debug release 17] to target\test-classes
+[INFO]
+[INFO] --- surefire:3.2.5:test (default-test) @ titan-chess-engine ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO]
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.titan.search.QuiescenceTest
+info depth 1 score cp 0 time 34 nodes 23 nps 676 pv f6e5
+info depth 2 score cp 0 time 35 nodes 46 nps 1314 pv f6e5
+[ERROR] Tests run: 6, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 0.373 s <<< FAILURE! -- in com.titan.search.QuiescenceTest
+[ERROR] com.titan.search.QuiescenceTest.quietMateOnHundredthHalfmoveIsFoundBySearch -- Time elapsed: 0.045 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: A quiet mating move ends the game before a draw claim ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at com.titan.search.QuiescenceTest.quietMateOnHundredthHalfmoveIsFoundBySearch(QuiescenceTest.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[ERROR] com.titan.search.QuiescenceTest.checkmateTakesPrecedenceOverFiftyMoveDrawAtHorizon -- Time elapsed: 0.041 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <-99999> but was: <0>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:145)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:531)
+	at com.titan.search.QuiescenceTest.checkmateTakesPrecedenceOverFiftyMoveDrawAtHorizon(QuiescenceTest.java:35)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO]
+[INFO] Results:
+[INFO]
+[ERROR] Failures:
+[ERROR]   QuiescenceTest.checkmateTakesPrecedenceOverFiftyMoveDrawAtHorizon:35 expected: <-99999> but was: <0>
+[ERROR]   QuiescenceTest.quietMateOnHundredthHalfmoveIsFoundBySearch:43 A quiet mating move ends the game before a draw claim ==> expected: <true> but was: <false>
+[INFO]
+[ERROR] Tests run: 6, Failures: 2, Errors: 0, Skipped: 0
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  4.965 s
+[INFO] Finished at: 2026-10-30T23:51:15+05:30
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.5:test (default-test) on project titan-chess-engine: There are test failures.
+[ERROR]
+[ERROR] Please refer to D:\chessEngine\target\surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

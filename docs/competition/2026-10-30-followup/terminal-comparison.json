@@ -1,0 +1,8 @@
+{
+  "rows": 15,
+  "identical_search_results": true,
+  "mismatches": [],
+  "tactical_total_ms": 2447,
+  "terminal_total_ms": 2517,
+  "note": "One fixed-depth diagnostic comparison; timings vary with host/JVM. Not strength evidence."
+}
