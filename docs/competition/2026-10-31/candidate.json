@@ -1,0 +1,8 @@
+{
+  "jar": "artifacts\\2026-10-31\\time-policy-candidate\\titan-time-policy.jar",
+  "sha256": "0dbb39e225974a43e3e4e17cfa6565a6a60a13181471dfe91ac0b4b65153ea3f",
+  "same_jar_for_control_and_treatment": true,
+  "experimental_jvm_option": "-Dtitan.experimental.fullSoftClock=true",
+  "default_policy_unchanged": true,
+  "fixed_depth_rows_identical": 15
+}

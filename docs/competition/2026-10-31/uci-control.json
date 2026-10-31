@@ -1,0 +1,137 @@
+{
+  "jar": "artifacts\\2026-10-31\\time-policy-candidate\\titan-time-policy.jar",
+  "full_soft_clock": false,
+  "passed": 25,
+  "cases": [
+    {
+      "case": "immediate_stop",
+      "iteration": 0,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "immediate_stop",
+      "iteration": 1,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "immediate_stop",
+      "iteration": 2,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "immediate_stop",
+      "iteration": 3,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "immediate_stop",
+      "iteration": 4,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "immediate_stop",
+      "iteration": 5,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "immediate_stop",
+      "iteration": 6,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "immediate_stop",
+      "iteration": 7,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "immediate_stop",
+      "iteration": 8,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "immediate_stop",
+      "iteration": 9,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "immediate_stop",
+      "iteration": 10,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "immediate_stop",
+      "iteration": 11,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "immediate_stop",
+      "iteration": 12,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "immediate_stop",
+      "iteration": 13,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "immediate_stop",
+      "iteration": 14,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "immediate_stop",
+      "iteration": 15,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "immediate_stop",
+      "iteration": 16,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "immediate_stop",
+      "iteration": 17,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "immediate_stop",
+      "iteration": 18,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "immediate_stop",
+      "iteration": 19,
+      "bestmove": "a2a3"
+    },
+    {
+      "case": "go wtime 0 btime 0",
+      "transcript": [
+        "bestmove a2a3"
+      ]
+    },
+    {
+      "case": "go movetime 0",
+      "transcript": [
+        "bestmove a2a3"
+      ]
+    },
+    {
+      "case": "go wtime 1 btime 1 winc 2000 binc 2000",
+      "transcript": [
+        "bestmove a2a3"
+      ]
+    },
+    {
+      "case": "mate",
+      "transcript": [
+        "bestmove 0000"
+      ]
+    },
+    {
+      "case": "stalemate",
+      "transcript": [
+        "bestmove 0000"
+      ]
+    }
+  ]
+}

@@ -31,3 +31,6 @@ jobs:
 
     - name: Check benchmark interruption detection
       run: python3 -m unittest discover -s testing -p test_match_guard.py -v
+
+    - name: Check opt-in clock policy UCI safety
+      run: python3 testing/check_uci_reliability.py --jar target/titan-chess-engine-1.0.0-SNAPSHOT.jar --full-soft-clock --output target/uci-experimental-policy.json

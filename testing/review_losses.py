@@ -30,7 +30,7 @@ def select(path, numbers):
                     now={'fen':board.fen(),'moves':list(history),'played':node.move.uci(),
                          'ply':len(history)+1,'logged_score_pawns':score,'comment':node.comment}
                     if previous and score<=previous['logged_score_pawns']-1 and previous['logged_score_pawns']>-2:
-                        found={'source':str(path),'game':number,'before_drop':previous,'after_drop':now}
+                        found={'source':str(path),'game':number,'initial_fen':game.board().fen(),'before_drop':previous,'after_drop':now}
                         break
                     previous=now
                 history.append(node.move.uci()); board.push(node.move)
@@ -60,7 +60,7 @@ def main():
                     engine.send('uci'); engine.until('uciok',10)
                     engine.send('position startpos'); engine.send('go depth 5'); engine.until('bestmove ',20)
                     engine.send('ucinewgame'); engine.send('isready'); engine.until('readyok',10)
-                    engine.send('position startpos moves '+' '.join(position['moves']))
+                    engine.send('position fen '+case['initial_fen']+' moves '+' '.join(position['moves']))
                     start=time.perf_counter(); engine.send(command)
                     lines=engine.until('bestmove ',60)
                     last=next((line for line in reversed(lines) if line.startswith('info depth ')),None)

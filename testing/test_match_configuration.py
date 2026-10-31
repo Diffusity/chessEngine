@@ -5,6 +5,12 @@ from continue_validation import resume_command
 
 
 class MatchConfigurationTest(unittest.TestCase):
+    def test_experimental_gate_is_applied_only_to_candidate(self):
+        cmd = command('fastchess.exe', 'java.exe', 10, candidate_full_soft_clock=True)
+        engine_args = [x for x in cmd if x.startswith('args=')]
+        self.assertIn('-Dtitan.experimental.fullSoftClock=true', engine_args[0])
+        self.assertNotIn('fullSoftClock', engine_args[1])
+
     def test_local_opening_positions_keep_colour_pairs(self):
         cmd = command('fastchess.exe', 'java.exe', 10, 'positions.epd')
         self.assertIn('file=positions.epd', cmd)

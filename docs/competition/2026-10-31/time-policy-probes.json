@@ -1,0 +1,83 @@
+[
+  {
+    "game": 6,
+    "ply": 80,
+    "clock_command": "go wtime 82337 btime 121726 winc 2000 binc 2000",
+    "probes": [
+      {
+        "command": "go wtime 82337 btime 121726 winc 2000 binc 2000",
+        "elapsed_ms": 2311,
+        "bestmove": "h3h2",
+        "info": "info depth 14 score cp -71 time 2303 nodes 1859556 nps 807449 pv h3h2 h6h2 g2h2 b4b5 e3e2 d3e2 g3c3 a3a4 c3c5 e2d3 h2g3 d3d4 c5c1 a4a5 c1d1 d4e3 d1e1 e3d4",
+        "depth": 14,
+        "score_type": "cp",
+        "score": -71,
+        "experimental": false
+      },
+      {
+        "command": "go wtime 82337 btime 121726 winc 2000 binc 2000",
+        "elapsed_ms": 5318,
+        "bestmove": "g2f2",
+        "info": "info depth 16 score cp 0 time 5312 nodes 4734773 nps 891335 pv g2f2 h6f6 f2e1 c6c7 e3e2 d3c2 g3g8 b4b5 g8h8 b5b6 h3h2 b6b7 h2h1q b7b8q h1e4 c2c1 h8b8 c7b8q e4f4 f6f4",
+        "depth": 16,
+        "score_type": "cp",
+        "score": 0,
+        "experimental": true
+      }
+    ]
+  },
+  {
+    "game": 11,
+    "ply": 37,
+    "clock_command": "go wtime 139496 btime 133637 winc 2000 binc 2000",
+    "probes": [
+      {
+        "command": "go wtime 139496 btime 133637 winc 2000 binc 2000",
+        "elapsed_ms": 2721,
+        "bestmove": "e3d4",
+        "info": "info depth 12 score cp -75 time 2716 nodes 1768733 nps 651227 pv e3d4 d6g3 f2g3 b7f3 c1f4 f3d1 a4e8 f6e8 f4c7 e8c7 b1d1 c5d4 g1f2",
+        "depth": 12,
+        "score_type": "cp",
+        "score": -75,
+        "experimental": false
+      },
+      {
+        "command": "go wtime 139496 btime 133637 winc 2000 binc 2000",
+        "elapsed_ms": 7161,
+        "bestmove": "e3d4",
+        "info": "info depth 14 score cp -77 time 7156 nodes 5239707 nps 732211 pv e3d4 d6g3 d4d5 g3d6 b2b3 g8g7 c1b2 g7h7 a4c4 h7g8 d1e1 d6f4 b1d1 e8e1 f3e1",
+        "depth": 14,
+        "score_type": "cp",
+        "score": -77,
+        "experimental": true
+      }
+    ]
+  },
+  {
+    "game": 14,
+    "ply": 64,
+    "clock_command": "go wtime 102148 btime 126805 winc 2000 binc 2000",
+    "probes": [
+      {
+        "command": "go wtime 102148 btime 126805 winc 2000 binc 2000",
+        "elapsed_ms": 3106,
+        "bestmove": "e6d6",
+        "info": "info depth 18 score cp -137 time 3099 nodes 3277102 nps 1057470 pv e6d6 d3c3 d6d7 e2e3 d7e7 f3f4 g6h5 c3d3 h5g6 d3d8 g6f7 f4g5 f6g5 e3f3 f7e6 f3g4 e6f6 g4f3",
+        "depth": 18,
+        "score_type": "cp",
+        "score": -137,
+        "experimental": false
+      },
+      {
+        "command": "go wtime 102148 btime 126805 winc 2000 binc 2000",
+        "elapsed_ms": 8744,
+        "bestmove": "e6d6",
+        "info": "info depth 18 score cp -137 time 2854 nodes 3277102 nps 1148248 pv e6d6 d3c3 d6d7 e2e3 d7e7 f3f4 g6h5 c3d3 h5g6 d3d8 g6f7 f4g5 f6g5 e3f3 f7e6 f3g4 e6f6 g4f3",
+        "depth": 18,
+        "score_type": "cp",
+        "score": -137,
+        "experimental": true
+      }
+    ]
+  }
+]

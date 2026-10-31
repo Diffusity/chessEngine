@@ -18,9 +18,15 @@ public class SearchLimits {
     private static final long SAFETY_RESERVE_MS = 10;
     private final LongSupplier nanoClock;
     private boolean timed;
+    private final boolean fullSoftClock;
+    private boolean clockBudget;
 
-    public SearchLimits() { this(System::nanoTime); }
-    SearchLimits(LongSupplier nanoClock) { this.nanoClock = nanoClock; }
+    public SearchLimits() { this(System::nanoTime, Boolean.getBoolean("titan.experimental.fullSoftClock")); }
+    SearchLimits(LongSupplier nanoClock) { this(nanoClock, false); }
+    SearchLimits(LongSupplier nanoClock, boolean fullSoftClock) {
+        this.nanoClock = nanoClock;
+        this.fullSoftClock = fullSoftClock;
+    }
 
     public static SearchLimits infinite() {
         SearchLimits limits = new SearchLimits();
@@ -45,6 +51,7 @@ public class SearchLimits {
         long remaining = whiteToMove ? wtime : btime;
         long increment = Math.max(0, whiteToMove ? winc : binc);
         timed = !infinite && (remaining >= 0 || movetime >= 0);
+        clockBudget = timed && remaining >= 0 && movetime < 0;
         if (!timed) {
             softLimit = hardLimit = Long.MAX_VALUE;
             return;
@@ -74,6 +81,8 @@ public class SearchLimits {
     public boolean isTimeUp() { return timed && elapsedMillis() >= hardLimit; }
 
     public boolean shouldDeepen() {
-        return !timed || elapsedMillis() < softLimit / 2;
+        // Opt-in ablation only: neither the hard deadline nor fixed movetime changes.
+        long threshold = fullSoftClock && clockBudget ? softLimit : softLimit / 2;
+        return !timed || elapsedMillis() < threshold;
     }
 }

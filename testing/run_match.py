@@ -10,9 +10,10 @@ import os
 from match_guard import MatchGuard
 
 
-def command(fastchess, java, pairs, openings=None):
+def command(fastchess, java, pairs, openings=None, candidate_full_soft_clock=False):
+    experimental = '-Dtitan.experimental.fullSoftClock=true ' if candidate_full_soft_clock else ''
     result = [str(fastchess),
-            "-engine", f"cmd={java}", "name=Candidate", "args=-Xmx512m -jar candidate.jar",
+            "-engine", f"cmd={java}", "name=Candidate", f"args=-Xmx512m {experimental}-jar candidate.jar",
             "-engine", f"cmd={java}", "name=Baseline", "args=-Xmx512m -jar baseline.jar",
             "-each", "proto=uci", "tc=180+2", "timemargin=0", "option.Hash=64",
             "-rounds", str(pairs), "-games", "2", "-concurrency", "1",
@@ -33,6 +34,7 @@ def main():
     parser.add_argument("--java", default="java.exe")
     parser.add_argument("--pairs", type=int, default=10)
     parser.add_argument("--openings", type=Path)
+    parser.add_argument("--candidate-full-soft-clock", action='store_true')
     args = parser.parse_args()
     if args.pairs < 1:
         parser.error("pairs must be positive")
@@ -51,7 +53,7 @@ def main():
         openings = args.openings.resolve(strict=True)
         shutil.copy2(openings, output / 'openings.epd')
         openings = output / 'openings.epd'
-    cmd = command(source["fastchess"], java, args.pairs, openings)
+    cmd = command(source["fastchess"], java, args.pairs, openings, args.candidate_full_soft_clock)
     manifest = {"command": cmd, "sources": {k: str(v) for k,v in source.items()},
                 "sha256": hashes, "fastchess_sha256": hashlib.sha256(source["fastchess"].read_bytes()).hexdigest(),
                 "java": subprocess.run([java, "-version"], capture_output=True, text=True, timeout=15).stderr,
@@ -60,6 +62,7 @@ def main():
                 "openings": "standard starting position; no book or external analysis",
                 "status": "running"}
     path = output / "manifest.json"
+    manifest['candidate_time_policy'] = 'experimental-full-soft-clock' if args.candidate_full_soft_clock else 'default'
     if openings:
         manifest['openings'] = 'Local test positions only; not an engine opening book'
         manifest['openings_sha256'] = hashlib.sha256(openings.read_bytes()).hexdigest()

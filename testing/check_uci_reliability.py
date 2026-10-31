@@ -13,11 +13,13 @@ def main():
     parser.add_argument("--jar", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--java", default="java")
+    parser.add_argument("--full-soft-clock", action='store_true')
     args = parser.parse_args()
     if args.output.exists():
         parser.error("Choose a new output filename")
     results = []
-    engine = Engine(args.java, args.jar.resolve(strict=True))
+    engine = Engine(args.java, args.jar.resolve(strict=True),
+                    ['-Dtitan.experimental.fullSoftClock=true'] if args.full_soft_clock else [])
     try:
         engine.send("uci")
         engine.until("uciok", 10)
@@ -58,7 +60,8 @@ def main():
         engine.close()
     assert not engine.stderr, engine.stderr
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps({"jar": str(args.jar), "passed": len(results), "cases": results}, indent=2))
+    args.output.write_text(json.dumps({"jar": str(args.jar), "full_soft_clock": args.full_soft_clock,
+                                      "passed": len(results), "cases": results}, indent=2))
     print(f"Passed {len(results)} process-level UCI checks")
 
 

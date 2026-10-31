@@ -28,11 +28,11 @@ COMMANDS = {
 
 
 class Engine:
-    def __init__(self, java, jar):
+    def __init__(self, java, jar, java_options=None):
         self.lines = queue.Queue()
         self.stderr = []
         self.process = subprocess.Popen(
-            [java, "-jar", str(jar)], stdin=subprocess.PIPE,
+            [java, *(java_options or []), "-jar", str(jar)], stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             text=True, bufsize=1,
         )
