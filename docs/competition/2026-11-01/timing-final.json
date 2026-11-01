@@ -1,0 +1,84 @@
+{
+  "checks": [
+    {
+      "path": "artifacts\\matches\\2026-10-31-time-policy\\full-soft-vs-default",
+      "completed": 18,
+      "candidate": {
+        "draw": 10,
+        "loss": 3,
+        "win": 5
+      },
+      "terminations": {
+        "normal": 18
+      },
+      "max_wall_gap": 1.0247571468353271
+    },
+    {
+      "path": "artifacts\\matches\\2026-11-01-time-policy-resume\\replacement-full-soft-vs-default",
+      "completed": 2,
+      "candidate": {
+        "loss": 2
+      },
+      "terminations": {
+        "normal": 2
+      },
+      "max_wall_gap": 1.0211575031280518
+    },
+    {
+      "path": "artifacts\\matches\\2026-11-01-time-policy-resume\\full-soft-vs-original",
+      "completed": 20,
+      "candidate": {
+        "loss": 6,
+        "draw": 11,
+        "win": 3
+      },
+      "terminations": {
+        "normal": 20
+      },
+      "max_wall_gap": 1.0255439281463623
+    }
+  ],
+  "results": [
+    {
+      "comparison": "experimental_vs_default",
+      "wins": 5,
+      "draws": 10,
+      "losses": 5,
+      "statistics": {
+        "Candidate": {
+          "mean_depth": 16.50186706497386,
+          "mean_move_seconds": 4.114347274085138,
+          "minimum_clock_seconds": 11.195,
+          "samples": 1339
+        },
+        "Baseline": {
+          "mean_depth": 16.30119581464873,
+          "mean_move_seconds": 3.1820530642750375,
+          "minimum_clock_seconds": 70.276,
+          "samples": 1338
+        }
+      }
+    },
+    {
+      "comparison": "experimental_vs_original",
+      "wins": 3,
+      "draws": 11,
+      "losses": 6,
+      "statistics": {
+        "Candidate": {
+          "mean_depth": 14.576407506702413,
+          "mean_move_seconds": 4.461745308310992,
+          "minimum_clock_seconds": 11.038,
+          "samples": 1119
+        },
+        "Baseline": {
+          "mean_depth": 15.32413178984862,
+          "mean_move_seconds": 3.8211300089047193,
+          "minimum_clock_seconds": 35.259,
+          "samples": 1123
+        }
+      }
+    }
+  ],
+  "limitations": "20 games per comparison, ten paired local openings. Depth and clock averages describe different reached positions, not equal-position causal estimates. Original batch retains only pre-failure complete pairs per retention audit. No strength promotion."
+}

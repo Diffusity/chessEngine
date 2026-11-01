@@ -1,0 +1,39 @@
+{
+  "workload": "ProfileSearch depth 10, five rounds, three positions, warmup depth 6",
+  "execution_samples": 3716,
+  "inclusive_stack_counts": {
+    "com/titan/search/Searcher.quiescence": 2693,
+    "com/titan/movegen/MoveGenerator.generateLegalMoves": 2560,
+    "com/titan/search/Searcher.alphaBeta": 1694,
+    "com/titan/board/Board.makeMove": 835,
+    "com/titan/movegen/MoveGenerator.isAttacked": 698,
+    "com/titan/movegen/Attacks.bishopAttacks": 632,
+    "com/titan/movegen/MoveGenerator.isInCheck": 629,
+    "com/titan/movegen/Attacks.rookAttacks": 488,
+    "com/titan/movegen/MoveGenerator.generatePseudoLegalMoves": 433,
+    "com/titan/evaluation/Evaluator.evaluate": 288,
+    "com/titan/search/SEE.see": 272,
+    "com/titan/search/MoveOrderer.scoreMoves": 250,
+    "com/titan/movegen/MoveGenerator.generateSlidingMoves": 205,
+    "com/titan/search/SEE.getAttackers": 178,
+    "com/titan/movegen/MoveGenerator.addStandardMoves": 176,
+    "com/titan/movegen/MoveGenerator.generateKingMoves": 92,
+    "com/titan/movegen/MoveGenerator.generatePawnMoves": 87,
+    "com/titan/movegen/Attacks.queenAttacks": 83,
+    "com/titan/search/SEE.getLeastValuableAttacker": 82,
+    "com/titan/board/Board.unmakeMove": 77
+  },
+  "sampled_allocation_weights_bytes": {
+    "com/titan/board/BoardState": 10976452864,
+    "com/titan/board/Move": 3005180248,
+    "[Ljava/lang/Object;": 2558803368,
+    "[I": 1764994024,
+    "jdk/internal/classfile/impl/AccessFlagsImpl": 1268446360,
+    "[Lcom/titan/board/Piece;": 1071808648,
+    "java/util/ArrayList": 220472784,
+    "java/util/ArrayList$Itr": 132066400,
+    "[J": 29323016,
+    "[B": 1046152
+  },
+  "caveats": "Sampling estimates; inclusive stack counts overlap. Raw JFR retained under ignored artifacts/profiles."
+}

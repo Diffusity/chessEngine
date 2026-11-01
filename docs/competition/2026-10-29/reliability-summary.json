@@ -1,0 +1,29 @@
+{
+  "jar_sha256": "07a2a94817a290171ceceaa50287975b8aee845cf44a5a72fe57c15a5cc9c993",
+  "modes": {
+    "fixed_100ms": {
+      "count": 6,
+      "min_ms": 54.025,
+      "median_ms": 56.368,
+      "max_ms": 137.55
+    },
+    "fixed_1000ms": {
+      "count": 6,
+      "min_ms": 537.078,
+      "median_ms": 838.409,
+      "max_ms": 935.767
+    },
+    "clock_3plus2": {
+      "count": 6,
+      "min_ms": 2903.307,
+      "median_ms": 3620.115,
+      "max_ms": 4411.32
+    },
+    "low_clock": {
+      "count": 6,
+      "min_ms": 102.937,
+      "median_ms": 122.316,
+      "max_ms": 191.435
+    }
+  }
+}

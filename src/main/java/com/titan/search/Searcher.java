@@ -24,6 +24,7 @@ public class Searcher implements Search {
     private Board board;
     private volatile boolean stopped;
     private long nodes;
+    private long nextTimeCheck;
 
     private Move[][] pvTable;
     private int[] pvLength;
@@ -62,9 +63,11 @@ public class Searcher implements Search {
 
     @Override
     public SearchResult search(Board board, SearchLimits limits) {
+        this.board = board;
         this.limits = limits;
-        this.stopped = false;
+        this.stopped = Thread.currentThread().isInterrupted();
         this.nodes = 0;
+        this.nextTimeCheck = 0;
         this.searchStack.clear();
         this.killerTable.clear();
         this.counterMoveTable.clear();
@@ -87,9 +90,19 @@ public class Searcher implements Search {
 
     private SearchResult iterativeDeepening() {
         int targetDepth = limits.depth > 0 ? limits.depth : MAX_DEPTH;
-        Move bestMove = null;
+        // Establish a legal answer even if the deadline expired during setup.
+        // Terminal positions must be recognised before the first deadline check.
+        List<Move> rootMoves = MoveGenerator.generateLegalMoves(board);
+        if (rootMoves.isEmpty()) {
+            int score = MoveGenerator.isInCheck(board, board.isWhiteToMove())
+                    ? -Score.mateScore(0) : Score.DRAW;
+            return new SearchResult(null, score, 0, nodes,
+                    limits.elapsedMillis(), List.of());
+        }
+        Move bestMove = rootMoves.get(0);
         int bestScore = Score.NONE;
         int depthReached = 0;
+        List<Move> completedPv = List.of();
         
         int alpha = -Score.INFINITY;
         int beta = Score.INFINITY;
@@ -106,7 +119,7 @@ public class Searcher implements Search {
                 }
             }
 
-            if (stopped && depth > 1) {
+            if (stopped) {
                 break;
             }
 
@@ -128,11 +141,12 @@ public class Searcher implements Search {
             for (int i = 0; i < pvLength[0]; i++) {
                 pv.add(pvTable[0][i]);
             }
+            completedPv = List.copyOf(pv);
 
             SearchResult result = new SearchResult(
                     bestMove, bestScore, depthReached, nodes,
-                    (System.nanoTime() - limits.startTime) / 1_000_000,
-                    pv
+                    limits.elapsedMillis(),
+                    completedPv
             );
             System.out.println(result.toUCIString());
 
@@ -145,24 +159,15 @@ public class Searcher implements Search {
             }
         }
 
-        List<Move> finalPv = new ArrayList<>();
-        for (int i = 0; i < pvLength[0]; i++) {
-            finalPv.add(pvTable[0][i]);
-        }
-        
         return new SearchResult(
                 bestMove, bestScore, depthReached, nodes,
-                (System.nanoTime() - limits.startTime) / 1_000_000,
-                finalPv
+                limits.elapsedMillis(),
+                completedPv
         );
     }
 
     private int alphaBeta(int depth, int ply, int alpha, int beta, boolean allowNull) {
-        if ((nodes & 2047) == 0 && limits.isTimeUp()) {
-            stopped = true;
-        }
-
-        if (stopped) return 0;
+        if (shouldStop()) return 0;
 
         pvLength[ply] = ply;
 
@@ -170,7 +175,7 @@ public class Searcher implements Search {
         boolean isPVNode = (beta - alpha > 1);
 
         if (ply > 0 && isDraw()) {
-            return Score.DRAW;
+            return drawOrCheckmateScore(ply);
         }
 
         boolean inCheck = MoveGenerator.isInCheck(board, board.isWhiteToMove());
@@ -216,13 +221,16 @@ public class Searcher implements Search {
         if (!isPVNode && !inCheck && depth <= 3 && !Score.isMateScore(beta)) {
             int rfpMargin = depth * 75;
             if (staticEval - rfpMargin >= beta) {
-                return staticEval;
+                // Static evaluation cannot establish a cutoff in stalemate.
+                return MoveGenerator.hasLegalMove(board) ? staticEval : Score.DRAW;
             }
         }
 
         // Null Move Pruning
         boolean hasNonPawnMaterial = board.hasNonPawnMaterial(board.isWhiteToMove());
         if (allowNull && !inCheck && !isPVNode && depth >= 3 && hasNonPawnMaterial && staticEval >= beta) {
+            // Having a piece does not guarantee that a legal move exists.
+            if (!MoveGenerator.hasLegalMove(board)) return Score.DRAW;
             board.makeNullMove();
             int R = 2; // reduction
             int score = -alphaBeta(depth - 1 - R, ply + 1, -beta, -beta + 1, false);
@@ -306,7 +314,7 @@ public class Searcher implements Search {
                 int reduction = (int) (1 + Math.log(depth) * Math.log(movesSearched) / 2.0);
                 
                 // History-tuned reduction
-                int histScore = historyTable.getScore(board.isWhiteToMove(), move.from(), move.to());
+                int histScore = historyTable.getScore(!board.isWhiteToMove(), move.from(), move.to());
                 if (histScore > 0) {
                     reduction -= 1; // Good history -> search deeper
                 } else if (histScore < 0) {
@@ -394,30 +402,31 @@ public class Searcher implements Search {
     }
 
     private int quiescence(int alpha, int beta, int ply) {
-        if ((nodes & 2047) == 0 && limits.isTimeUp()) {
-            stopped = true;
-        }
-
-        if (stopped) return 0;
+        if (shouldStop()) return 0;
 
         if (ply >= MAX_DEPTH - 1) {
             return Evaluator.evaluate(board);
         }
 
         if (isDraw()) {
-            return Score.DRAW;
+            return drawOrCheckmateScore(ply);
         }
 
-        int standPat = Evaluator.evaluate(board);
-        if (standPat >= beta) {
-            return beta;
-        }
-        if (standPat > alpha) {
-            alpha = standPat;
+        boolean inCheck = MoveGenerator.isInCheck(board, board.isWhiteToMove());
+        List<Move> captures = inCheck ? MoveGenerator.generateLegalMoves(board)
+                                    : MoveGenerator.generateTacticalMoves(board);
+        // A quiet legal move distinguishes a quiet position from stalemate.
+        // In check, all evasions were generated, so an empty list means mate.
+        if (captures.isEmpty() && (inCheck || !MoveGenerator.hasLegalMove(board))) {
+            return inCheck ? -Score.mateScore(ply) : Score.DRAW;
         }
 
-        List<Move> captures = MoveGenerator.generateCaptures(board);
-        
+        if (!inCheck) {
+            int standPat = Evaluator.evaluate(board);
+            if (standPat >= beta) return beta;
+            alpha = Math.max(alpha, standPat);
+        }
+
         int[] moveScores = new int[captures.size()];
         MoveOrderer.scoreMoves(captures, moveScores, board, 0, null, ply, null, 0);
 
@@ -426,7 +435,7 @@ public class Searcher implements Search {
             Move move = captures.get(i);
             
             // Quiescence SEE pruning (don't search losing captures)
-            if (!SEE.see(board, move, 0)) {
+            if (!inCheck && !move.isPromotion() && !SEE.see(board, move, 0)) {
                 continue;
             }
             
@@ -448,8 +457,26 @@ public class Searcher implements Search {
         return alpha;
     }
 
+    private boolean shouldStop() {
+        if (Thread.currentThread().isInterrupted()) stopped = true;
+        if (!stopped && nodes >= nextTimeCheck) {
+            nextTimeCheck = nodes + 256;
+            if (limits.isTimeUp()) stopped = true;
+        }
+        return stopped;
+    }
+
     private boolean isDraw() {
         return board.isRepetition() || board.isFiftyMoveRule() || board.isInsufficientMaterial();
+    }
+
+    private int drawOrCheckmateScore(int ply) {
+        // A mating move ends the game before a fifty-move draw can be claimed.
+        // Probe legality only on this uncommon draw path, not at every node.
+        if (MoveGenerator.isInCheck(board, board.isWhiteToMove()) && !MoveGenerator.hasLegalMove(board)) {
+            return -Score.mateScore(ply);
+        }
+        return Score.DRAW;
     }
 
     private void updatePV(int ply, Move move) {

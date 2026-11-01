@@ -1,0 +1,54 @@
+[
+  {
+    "order": "before-after",
+    "depth": 8,
+    "rows": 15,
+    "identical_nodes_scores_moves": true,
+    "positions": [
+      {
+        "position": 0,
+        "before_median_ms": 111,
+        "after_median_ms": 65,
+        "speedup": 1.71
+      },
+      {
+        "position": 1,
+        "before_median_ms": 836,
+        "after_median_ms": 436,
+        "speedup": 1.92
+      },
+      {
+        "position": 2,
+        "before_median_ms": 21,
+        "after_median_ms": 16,
+        "speedup": 1.31
+      }
+    ]
+  },
+  {
+    "order": "after-before",
+    "depth": 8,
+    "rows": 15,
+    "identical_nodes_scores_moves": true,
+    "positions": [
+      {
+        "position": 0,
+        "before_median_ms": 107,
+        "after_median_ms": 64,
+        "speedup": 1.67
+      },
+      {
+        "position": 1,
+        "before_median_ms": 975,
+        "after_median_ms": 409,
+        "speedup": 2.38
+      },
+      {
+        "position": 2,
+        "before_median_ms": 24,
+        "after_median_ms": 14,
+        "speedup": 1.71
+      }
+    ]
+  }
+]

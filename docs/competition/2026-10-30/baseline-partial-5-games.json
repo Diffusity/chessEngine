@@ -1,0 +1,128 @@
+{
+  "completed_games": 5,
+  "candidate": {
+    "loss": 2,
+    "draw": 3
+  },
+  "terminations": {
+    "normal": 5
+  },
+  "games": [
+    {
+      "number": 1,
+      "white": "Candidate",
+      "black": "Baseline",
+      "result": "0-1",
+      "candidate_outcome": "loss",
+      "plies": 196,
+      "termination": "normal",
+      "checkmate": true,
+      "final_fen": "8/8/8/8/6p1/2r3bk/3K4/4q3 w - - 4 99",
+      "max_move_seconds": {
+        "Candidate": 6.397,
+        "Baseline": 13.588
+      },
+      "min_recorded_clock_seconds": {
+        "Candidate": 69.947,
+        "Baseline": 44.412
+      },
+      "mean_reported_nps": {
+        "Candidate": 544383,
+        "Baseline": 880897
+      }
+    },
+    {
+      "number": 2,
+      "white": "Baseline",
+      "black": "Candidate",
+      "result": "1/2-1/2",
+      "candidate_outcome": "draw",
+      "plies": 158,
+      "termination": "normal",
+      "checkmate": false,
+      "final_fen": "8/8/7k/8/8/7K/8/8 w - - 0 80",
+      "max_move_seconds": {
+        "Baseline": 9.611,
+        "Candidate": 10.011
+      },
+      "min_recorded_clock_seconds": {
+        "Baseline": 42.551,
+        "Candidate": 79.198
+      },
+      "mean_reported_nps": {
+        "Baseline": 859523,
+        "Candidate": 569440
+      }
+    },
+    {
+      "number": 3,
+      "white": "Candidate",
+      "black": "Baseline",
+      "result": "1/2-1/2",
+      "candidate_outcome": "draw",
+      "plies": 115,
+      "termination": "normal",
+      "checkmate": false,
+      "final_fen": "8/8/8/1prp4/n5R1/2P5/3KB1k1/8 b - - 18 58",
+      "max_move_seconds": {
+        "Candidate": 7.205,
+        "Baseline": 8.866
+      },
+      "min_recorded_clock_seconds": {
+        "Candidate": 92.714,
+        "Baseline": 75.905
+      },
+      "mean_reported_nps": {
+        "Candidate": 618778,
+        "Baseline": 989860
+      }
+    },
+    {
+      "number": 4,
+      "white": "Baseline",
+      "black": "Candidate",
+      "result": "1-0",
+      "candidate_outcome": "loss",
+      "plies": 91,
+      "termination": "normal",
+      "checkmate": true,
+      "final_fen": "8/1pp2B2/5NRk/5P1p/4K3/7P/8/8 b - - 2 46",
+      "max_move_seconds": {
+        "Baseline": 13.191,
+        "Candidate": 10.318
+      },
+      "min_recorded_clock_seconds": {
+        "Baseline": 75.727,
+        "Candidate": 101.782
+      },
+      "mean_reported_nps": {
+        "Baseline": 845519,
+        "Candidate": 497075
+      }
+    },
+    {
+      "number": 5,
+      "white": "Candidate",
+      "black": "Baseline",
+      "result": "1/2-1/2",
+      "candidate_outcome": "draw",
+      "plies": 209,
+      "termination": "normal",
+      "checkmate": false,
+      "final_fen": "8/3Q4/4r3/3b1K2/8/8/5k2/8 b - - 100 105",
+      "max_move_seconds": {
+        "Candidate": 7.577,
+        "Baseline": 12.158
+      },
+      "min_recorded_clock_seconds": {
+        "Candidate": 63.45,
+        "Baseline": 48.795
+      },
+      "mean_reported_nps": {
+        "Candidate": 302845,
+        "Baseline": 472999
+      }
+    }
+  ],
+  "limitations": "Small diagnostic batch from startpos; repeated games are correlated. No Elo/strength conclusion."
+}

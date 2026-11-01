@@ -1,0 +1,100 @@
+{
+  "baseline": {
+    "sample_count": 24,
+    "startup_ms_range": [
+      245.05,
+      358.75
+    ],
+    "modes": {
+      "fixed_100ms": {
+        "count": 6,
+        "min_ms": 53.857,
+        "median_ms": 56.661,
+        "max_ms": 97.567,
+        "depth_range": [
+          2,
+          8
+        ]
+      },
+      "fixed_1000ms": {
+        "count": 6,
+        "min_ms": 514.091,
+        "median_ms": 624.084,
+        "max_ms": 780.854,
+        "depth_range": [
+          7,
+          15
+        ]
+      },
+      "clock_3plus2": {
+        "count": 6,
+        "min_ms": 4111.608,
+        "median_ms": 6254.181,
+        "max_ms": 7171.3,
+        "depth_range": [
+          12,
+          21
+        ]
+      },
+      "low_clock": {
+        "count": 6,
+        "min_ms": 251.051,
+        "median_ms": 254.633,
+        "max_ms": 262.615,
+        "depth_range": [
+          5,
+          11
+        ]
+      }
+    }
+  },
+  "candidate": {
+    "sample_count": 24,
+    "startup_ms_range": [
+      249.48,
+      355.95
+    ],
+    "modes": {
+      "fixed_100ms": {
+        "count": 6,
+        "min_ms": 54.776,
+        "median_ms": 65.376,
+        "max_ms": 103.678,
+        "depth_range": [
+          2,
+          8
+        ]
+      },
+      "fixed_1000ms": {
+        "count": 6,
+        "min_ms": 620.679,
+        "median_ms": 677.731,
+        "max_ms": 1002.905,
+        "depth_range": [
+          8,
+          14
+        ]
+      },
+      "clock_3plus2": {
+        "count": 6,
+        "min_ms": 3817.281,
+        "median_ms": 4452.763,
+        "max_ms": 7785.512,
+        "depth_range": [
+          12,
+          20
+        ]
+      },
+      "low_clock": {
+        "count": 6,
+        "min_ms": 255.33,
+        "median_ms": 263.453,
+        "max_ms": 273.184,
+        "depth_range": [
+          5,
+          10
+        ]
+      }
+    }
+  }
+}

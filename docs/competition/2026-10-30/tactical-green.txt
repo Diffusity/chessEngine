@@ -1,0 +1,123 @@
+[INFO] Scanning for projects...
+[INFO]
+[INFO] --------------------< com.titan:titan-chess-engine >--------------------
+[INFO] Building Titan Chess Engine 1.0.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- resources:3.3.1:resources (default-resources) @ titan-chess-engine ---
+[INFO] skip non existing resourceDirectory D:\chessEngine\src\main\resources
+[INFO]
+[INFO] --- compiler:3.11.0:compile (default-compile) @ titan-chess-engine ---
+[INFO] Changes detected - recompiling the module! :source
+[INFO] Compiling 38 source files with javac [debug release 17] to target\classes
+[INFO]
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ titan-chess-engine ---
+[INFO] Copying 1 resource from src\test\resources to target\test-classes
+[INFO]
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ titan-chess-engine ---
+[INFO] Changes detected - recompiling the module! :dependency
+[INFO] Compiling 16 source files with javac [debug release 17] to target\test-classes
+[INFO]
+[INFO] --- surefire:3.2.5:test (default-test) @ titan-chess-engine ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO]
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.titan.board.BoardTest
+[INFO] Tests run: 36, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.150 s -- in com.titan.board.BoardTest
+[INFO] Running com.titan.engine.EngineLifecycleTest
+bestmove a2a3
+bestmove a2a3
+bestmove a2a3
+bestmove a2a3
+bestmove a2a3
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.378 s -- in com.titan.engine.EngineLifecycleTest
+[INFO] Running com.titan.engine.EngineTest
+info depth 1 score cp 44 time 15 nodes 20 nps 1333 pv d2d4
+info depth 2 score cp 0 time 21 nodes 117 nps 5571 pv d2d4 d7d5
+info depth 3 score cp 44 time 29 nodes 732 nps 25241 pv d2d4 d7d5 g1f3
+info depth 4 score cp 0 time 59 nodes 1938 nps 32847 pv d2d4 d7d5 g1f3 g8f6
+info depth 5 score cp 39 time 74 nodes 6152 nps 83135 pv d2d4 d7d5 g1f3 g8f6 b1c3
+bestmove d2d4
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.457 s -- in com.titan.engine.EngineTest
+[INFO] Running com.titan.evaluation.EvaluatorTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.017 s -- in com.titan.evaluation.EvaluatorTest
+[INFO] Running com.titan.movegen.MoveGeneratorTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.114 s -- in com.titan.movegen.MoveGeneratorTest
+[INFO] Running com.titan.movegen.PerftTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.322 s -- in com.titan.movegen.PerftTest
+[INFO] Running com.titan.movegen.TacticalMoveGeneratorTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.059 s -- in com.titan.movegen.TacticalMoveGeneratorTest
+[INFO] Running com.titan.search.QuiescenceTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.096 s -- in com.titan.search.QuiescenceTest
+[INFO] Running com.titan.search.SearchCancellationTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.025 s -- in com.titan.search.SearchCancellationTest
+[INFO] Running com.titan.search.SearcherTest
+info depth 1 score mate 1 time 0 nodes 32 nps 32000 pv c5c8
+info depth 1 score cp 44 time 0 nodes 20 nps 20000 pv d2d4
+info depth 2 score cp 0 time 1 nodes 117 nps 117000 pv d2d4 d7d5
+info depth 3 score cp 44 time 5 nodes 732 nps 146400 pv d2d4 d7d5 g1f3
+info depth 4 score cp 0 time 13 nodes 1938 nps 149076 pv d2d4 d7d5 g1f3 g8f6
+info depth 5 score cp 39 time 31 nodes 6152 nps 198451 pv d2d4 d7d5 g1f3 g8f6 b1c3
+info depth 1 score cp 44 time 0 nodes 20 nps 20000 pv d2d4
+info depth 1 score mate 1 time 0 nodes 45 nps 45000 pv h5f7
+info depth 1 score cp 630 time 0 nodes 23 nps 23000 pv g1c1
+info depth 2 score cp 607 time 0 nodes 87 nps 87000 pv g1c1 h8h7
+info depth 3 score mate 2 time 2 nodes 621 nps 310500 pv f6f7 h8h7 g1h1
+info depth 1 score cp -31 time 0 nodes 71 nps 71000 pv d4g4
+info depth 2 score cp -75 time 1 nodes 206 nps 206000 pv d4g4 g8f6
+info depth 3 score cp -63 time 2 nodes 1015 nps 507500 pv d4g4 d7d5 g4g3
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.384 s -- in com.titan.search.SearcherTest
+[INFO] Running com.titan.search.SearchFallbackTest
+info depth 1 score mate 1 time 0 nodes 45 nps 45000 pv h5f7
+info depth 1 score cp 44 time 37 nodes 20 nps 540 pv d2d4
+info depth 2 score cp 0 time 37 nodes 117 nps 3162 pv d2d4 d7d5
+info depth 1 score cp 44 time 18 nodes 20 nps 1111 pv d2d4
+info depth 2 score cp 0 time 19 nodes 117 nps 6157 pv d2d4 d7d5
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.422 s -- in com.titan.search.SearchFallbackTest
+[INFO] Running com.titan.search.SearchLimitsTest
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.056 s -- in com.titan.search.SearchLimitsTest
+[INFO] Running com.titan.search.SEETest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.008 s -- in com.titan.search.SEETest
+[INFO] Running com.titan.tables.TranspositionTableTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.013 s -- in com.titan.tables.TranspositionTableTest
+[INFO] Running com.titan.uci.UCITest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.023 s -- in com.titan.uci.UCITest
+[INFO] Running com.titan.utils.FENTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s -- in com.titan.utils.FENTest
+[INFO]
+[INFO] Results:
+[INFO]
+[INFO] Tests run: 128, Failures: 0, Errors: 0, Skipped: 0
+[INFO]
+[INFO]
+[INFO] --- resources:3.3.1:resources (default-resources) @ titan-chess-engine ---
+[INFO] skip non existing resourceDirectory D:\chessEngine\src\main\resources
+[INFO]
+[INFO] --- compiler:3.11.0:compile (default-compile) @ titan-chess-engine ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO]
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ titan-chess-engine ---
+[INFO] Copying 1 resource from src\test\resources to target\test-classes
+[INFO]
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ titan-chess-engine ---
+[INFO] Changes detected - recompiling the module! :dependency
+[INFO] Compiling 16 source files with javac [debug release 17] to target\test-classes
+[INFO]
+[INFO] --- surefire:3.2.5:test (default-test) @ titan-chess-engine ---
+[INFO] Skipping execution of surefire because it has already been run for this configuration
+[INFO]
+[INFO] --- jar:3.3.0:jar (default-jar) @ titan-chess-engine ---
+[INFO] Building jar: D:\chessEngine\target\titan-chess-engine-1.0.0-SNAPSHOT.jar
+[INFO]
+[INFO] --- shade:3.5.1:shade (default) @ titan-chess-engine ---
+[INFO] Replacing original artifact with shaded artifact.
+[INFO] Replacing D:\chessEngine\target\titan-chess-engine-1.0.0-SNAPSHOT.jar with D:\chessEngine\target\titan-chess-engine-1.0.0-SNAPSHOT-shaded.jar
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  10.665 s
+[INFO] Finished at: 2026-10-30T10:43:30+05:30
+[INFO] ------------------------------------------------------------------------

@@ -14,6 +14,24 @@ import java.util.List;
  */
 public class MoveGenerator {
 
+    /** Legal captures and promotions, retaining normal generation order. */
+    public static List<Move> generateTacticalMoves(Board board) {
+        return filterLegal(board, generatePseudoLegalMoves(board, true));
+    }
+
+    /** Whether any legal move exists, without requiring the complete legal list. */
+    public static boolean hasLegalMove(Board board) {
+        boolean white = board.isWhiteToMove();
+        for (Move move : generatePseudoLegalMoves(board)) {
+            if (board.makeMove(move)) {
+                boolean legal = !isInCheck(board, white);
+                board.unmakeMove();
+                if (legal) return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Generates all strictly legal moves for the current position.
      *
@@ -21,7 +39,10 @@ public class MoveGenerator {
      * @return a list of all legal moves
      */
     public static List<Move> generateLegalMoves(Board board) {
-        List<Move> pseudoLegal = generatePseudoLegalMoves(board);
+        return filterLegal(board, generatePseudoLegalMoves(board));
+    }
+
+    private static List<Move> filterLegal(Board board, List<Move> pseudoLegal) {
         List<Move> legalMoves = new ArrayList<>(pseudoLegal.size());
         
         boolean whiteToMove = board.isWhiteToMove();
@@ -121,6 +142,10 @@ public class MoveGenerator {
      * movement rules of the piece, but it might leave the king in check.
      */
     public static List<Move> generatePseudoLegalMoves(Board board) {
+        return generatePseudoLegalMoves(board, false);
+    }
+
+    private static List<Move> generatePseudoLegalMoves(Board board, boolean tacticalOnly) {
         List<Move> moves = new ArrayList<>(40);
         boolean white = board.isWhiteToMove();
         
@@ -129,15 +154,18 @@ public class MoveGenerator {
         long allPieces = friendlyPieces | enemyPieces;
         long emptySquares = ~allPieces;
 
-        generatePawnMoves(board, white, enemyPieces, emptySquares, moves);
-        generateKnightMoves(board, white, friendlyPieces, enemyPieces, moves);
-        generateKingMoves(board, white, friendlyPieces, enemyPieces, moves);
-        generateSlidingMoves(board, white, friendlyPieces, enemyPieces, allPieces, moves);
+        // In tactical mode only enemy-occupied destinations are allowed for
+        // non-pawns. Sliding occupancy remains unchanged so rays stay blocked.
+        long excluded = tacticalOnly ? ~enemyPieces : friendlyPieces;
+        generatePawnMoves(board, white, enemyPieces, emptySquares, moves, tacticalOnly);
+        generateKnightMoves(board, white, excluded, enemyPieces, moves);
+        generateKingMoves(board, white, excluded, enemyPieces, moves, tacticalOnly);
+        generateSlidingMoves(board, white, excluded, enemyPieces, allPieces, moves);
 
         return moves;
     }
 
-    private static void generatePawnMoves(Board board, boolean white, long enemyPieces, long emptySquares, List<Move> moves) {
+    private static void generatePawnMoves(Board board, boolean white, long enemyPieces, long emptySquares, List<Move> moves, boolean tacticalOnly) {
         long pawns = board.getBitboard(Piece.PAWN, white);
         int pushOffset = white ? 8 : -8;
         long promoRankMask = white ? Bits.Rank.WHITE_PROMOTION : Bits.Rank.BLACK_PROMOTION;
@@ -152,8 +180,10 @@ public class MoveGenerator {
         long doublePushes = white ? (singlePushesNormal << 8) & emptySquares : (singlePushesNormal >>> 8) & emptySquares;
         doublePushes &= white ? Bits.Rank._4 : Bits.Rank._5; // Only allowed to rank 4 or 5
 
-        addPawnMoves(singlePushesNormal, -pushOffset, Move.FLAG_QUIET, moves);
-        addPawnMoves(doublePushes, -(pushOffset * 2), Move.FLAG_PAWN_DOUBLE, moves);
+        if (!tacticalOnly) {
+            addPawnMoves(singlePushesNormal, -pushOffset, Move.FLAG_QUIET, moves);
+            addPawnMoves(doublePushes, -(pushOffset * 2), Move.FLAG_PAWN_DOUBLE, moves);
+        }
         addPawnPromotions(singlePushesPromo, -pushOffset, false, moves);
 
         // Captures
@@ -226,7 +256,7 @@ public class MoveGenerator {
         }
     }
 
-    private static void generateKingMoves(Board board, boolean white, long friendly, long enemy, List<Move> moves) {
+    private static void generateKingMoves(Board board, boolean white, long friendly, long enemy, List<Move> moves, boolean tacticalOnly) {
         long king = board.getBitboard(Piece.KING, white);
         if (king == 0) return; // Should not happen in standard chess, but guard against it
         int from = Bits.lsb(king);
@@ -235,6 +265,7 @@ public class MoveGenerator {
         addStandardMoves(from, attacks, enemy, moves);
 
         // Castling
+        if (tacticalOnly) return;
         int castlingRights = board.getState().getCastlingRights();
         if (castlingRights != BoardState.NO_CASTLING && !isAttacked(board, from, !white)) {
             // Kingside

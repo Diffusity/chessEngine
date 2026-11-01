@@ -1,5 +1,6 @@
 # Build output
 target/
+artifacts/
 
 # IDE files
 .idea/
@@ -20,6 +21,17 @@ desktop.ini
 
 # Logs
 *.log
+!docs/competition/2026-10-29/tdd-red.log
+!docs/competition/2026-10-29/tdd-green.log
+!docs/competition/2026-10-29/full-suite.log
+!docs/competition/2026-10-29/lifecycle-red.log
+!docs/competition/2026-10-29/search-red.log
+!docs/competition/2026-10-29/reliability-green.log
+!docs/competition/2026-10-29/reliability-full.log
+!docs/competition/2026-10-29/lifecycle-red.log
+!docs/competition/2026-10-29/search-red.log
+!docs/competition/2026-10-29/reliability-green.log
+!docs/competition/2026-10-29/reliability-full.log
 
 # Compiled classes
 *.class

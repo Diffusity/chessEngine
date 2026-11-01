@@ -1,0 +1,53 @@
+{
+  "replacement-baseline": {
+    "games": 2,
+    "candidate": {
+      "draw": 1,
+      "loss": 1
+    },
+    "terminations": {
+      "normal": 2
+    },
+    "max_wall_gap_seconds": 1.0196399688720703,
+    "all_ac_online": true,
+    "minimum_candidate_recorded_clock_seconds": 97.398,
+    "combined_20_game_score": {
+      "loss": 9,
+      "draw": 10,
+      "win": 1
+    }
+  },
+  "replacement-tactical": {
+    "games": 6,
+    "candidate": {
+      "win": 2,
+      "draw": 4
+    },
+    "terminations": {
+      "normal": 6
+    },
+    "max_wall_gap_seconds": 1.021315574645996,
+    "all_ac_online": true,
+    "minimum_candidate_recorded_clock_seconds": 76.08,
+    "combined_20_game_score": {
+      "draw": 13,
+      "loss": 3,
+      "win": 4
+    }
+  },
+  "direct-final-vs-original": {
+    "games": 20,
+    "candidate": {
+      "win": 4,
+      "loss": 9,
+      "draw": 7
+    },
+    "terminations": {
+      "normal": 20
+    },
+    "max_wall_gap_seconds": 1.0219581127166748,
+    "all_ac_online": true,
+    "minimum_candidate_recorded_clock_seconds": 59.781,
+    "ten_distinct_colour_swapped_openings_verified": true
+  }
+}
