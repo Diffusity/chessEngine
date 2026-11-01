@@ -95,3 +95,30 @@ PR #1 remains unmerged. After the paired results, evaluate W/D/L together with
 clock usage, completed depths, abnormal endings and representative losses. If the
 timing alternative does not help, leave the default untouched and investigate
 the identified endgame/search-consistency cases with one-change ablations.
+
+## Interrupted timing study (verified 2026-11-01)
+
+The AC guard stopped the first batch on 2026-10-31 at approximately 14:29:44
+IST during game 19. The manifest records `invalid_or_interrupted` with
+`AC power disconnected; timed run invalidated`; the final clock sample confirms
+`ac_online: false`. The queue stopped for investigation and the second batch
+never started. No fastchess or Java process was present at this verification.
+
+The console records 18 completed games: experimental candidate 5 wins, 10 draws,
+and 3 losses against default. This is an interrupted, unaudited partial result,
+not a completed validation or evidence sufficient to promote the experiment.
+The original PGN, engine log, console, clock samples and manifest are preserved.
+Do not pool or resume these artifacts in place. Audit the completed opening pairs
+and clocks before deciding which evidence can be retained; any replacement run
+must use a separate directory and the same guard with stable AC power.
+
+### Partial-run audit on November 1
+
+`interrupted-audit.json` verifies all 18 completed PGNs replay legally and have
+normal terminations. All nine completed pairs use the same initial position with
+swapped colours. The copied candidate and control JAR hashes match. Across 8,970
+clock samples the maximum wall gap was 1.025 seconds and monotonic gap 1.032
+seconds; exactly one sample reports disconnected AC (the final sample).
+These checks do not convert the interrupted run into a completed validation.
+No results have been pooled. The current power check still reports battery
+operation, so no replacement games or second batch were launched.
