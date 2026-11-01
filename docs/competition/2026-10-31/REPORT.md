@@ -1,5 +1,11 @@
 # Loss diagnosis and opt-in time-policy experiment
 
+Final audited outcome (November 1): experimental/default 5W/10D/5L;
+experimental/original 3W/11D/6L. Default timing remains unchanged. See
+`../2026-11-01/REPORT.md` and `../2026-11-01/timing-final.json` for final checks,
+clock/depth observations and the separately reproduced stalemate cutoff fix.
+The launch and interruption sections below preserve the experiment history.
+
 ## Findings from three decisive direct-match losses
 
 The loss selector found qualifying one-pawn evaluation drops in games 6, 11 and

@@ -221,13 +221,16 @@ public class Searcher implements Search {
         if (!isPVNode && !inCheck && depth <= 3 && !Score.isMateScore(beta)) {
             int rfpMargin = depth * 75;
             if (staticEval - rfpMargin >= beta) {
-                return staticEval;
+                // Static evaluation cannot establish a cutoff in stalemate.
+                return MoveGenerator.hasLegalMove(board) ? staticEval : Score.DRAW;
             }
         }
 
         // Null Move Pruning
         boolean hasNonPawnMaterial = board.hasNonPawnMaterial(board.isWhiteToMove());
         if (allowNull && !inCheck && !isPVNode && depth >= 3 && hasNonPawnMaterial && staticEval >= beta) {
+            // Having a piece does not guarantee that a legal move exists.
+            if (!MoveGenerator.hasLegalMove(board)) return Score.DRAW;
             board.makeNullMove();
             int R = 2; // reduction
             int score = -alphaBeta(depth - 1 - R, ply + 1, -beta, -beta + 1, false);

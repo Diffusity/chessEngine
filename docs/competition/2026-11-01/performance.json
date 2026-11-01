@@ -1,0 +1,122 @@
+[
+  {
+    "repeat": 0,
+    "position": "start",
+    "build": "control",
+    "bestmove": "e2e4",
+    "depth": 8,
+    "nodes": 111884,
+    "time": 193,
+    "nps": 579709
+  },
+  {
+    "repeat": 0,
+    "position": "start",
+    "build": "candidate",
+    "bestmove": "e2e4",
+    "depth": 8,
+    "nodes": 111884,
+    "time": 206,
+    "nps": 543126
+  },
+  {
+    "repeat": 0,
+    "position": "kiwipete",
+    "build": "control",
+    "bestmove": "e2a6",
+    "depth": 8,
+    "nodes": 281350,
+    "time": 609,
+    "nps": 461986
+  },
+  {
+    "repeat": 0,
+    "position": "kiwipete",
+    "build": "candidate",
+    "bestmove": "e2a6",
+    "depth": 8,
+    "nodes": 281350,
+    "time": 600,
+    "nps": 468916
+  },
+  {
+    "repeat": 0,
+    "position": "rook_endgame",
+    "build": "control",
+    "bestmove": "b4f4",
+    "depth": 8,
+    "nodes": 21893,
+    "time": 46,
+    "nps": 475934
+  },
+  {
+    "repeat": 0,
+    "position": "rook_endgame",
+    "build": "candidate",
+    "bestmove": "b4f4",
+    "depth": 8,
+    "nodes": 21893,
+    "time": 48,
+    "nps": 456104
+  },
+  {
+    "repeat": 1,
+    "position": "start",
+    "build": "candidate",
+    "bestmove": "e2e4",
+    "depth": 8,
+    "nodes": 111884,
+    "time": 199,
+    "nps": 562231
+  },
+  {
+    "repeat": 1,
+    "position": "start",
+    "build": "control",
+    "bestmove": "e2e4",
+    "depth": 8,
+    "nodes": 111884,
+    "time": 262,
+    "nps": 427038
+  },
+  {
+    "repeat": 1,
+    "position": "kiwipete",
+    "build": "candidate",
+    "bestmove": "e2a6",
+    "depth": 8,
+    "nodes": 281350,
+    "time": 673,
+    "nps": 418053
+  },
+  {
+    "repeat": 1,
+    "position": "kiwipete",
+    "build": "control",
+    "bestmove": "e2a6",
+    "depth": 8,
+    "nodes": 281350,
+    "time": 631,
+    "nps": 445879
+  },
+  {
+    "repeat": 1,
+    "position": "rook_endgame",
+    "build": "candidate",
+    "bestmove": "b4f4",
+    "depth": 8,
+    "nodes": 21893,
+    "time": 52,
+    "nps": 421019
+  },
+  {
+    "repeat": 1,
+    "position": "rook_endgame",
+    "build": "control",
+    "bestmove": "b4f4",
+    "depth": 8,
+    "nodes": 21893,
+    "time": 54,
+    "nps": 405425
+  }
+]
